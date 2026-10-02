@@ -133,7 +133,7 @@ StudioDesk — сервіс розкладу, запису, абонементі
   - Після збереження студія отримує стан Active.
   - Успіх: повернення до списку студій, нова студія в ньому видна, показується повідомлення «Studio created».
 - **Інформація, що показується, і навіщо.** Усі поля редагуються. Піддомен показується з доменною частиною, щоб було зрозуміло, яка вийде адреса.
-- **Стани та винятки** (тексти зафіксовані): біля поля «This subdomain is already taken», «This subdomain is reserved», «This domain is already used by another studio», «Enter a valid e-mail address». Збій збереження: повідомлення «Something went wrong. Try again». Кнопка «Save» показує стан завантаження.
+- **Стани та винятки** (тексти зафіксовані): біля поля «Use 3–20 lowercase letters, digits or hyphens, starting with a letter», «This subdomain is already taken», «This subdomain is reserved», «This domain is already used by another studio», «Enter a valid e-mail address». Збій збереження: повідомлення «Something went wrong. Try again». Кнопка «Save» показує стан завантаження.
 - **Чекліст для агента:** поверхня — сторінка студії (режим створення); потік — форма → збереження → список; варіанти — порожня форма, автопідстановка піддомену, помилки; результат — повернення в список із повідомленням; фіксовані обмеження — поля, тексти; свобода — розкладка.
 
 ## Функціональна секція — Редагування студії

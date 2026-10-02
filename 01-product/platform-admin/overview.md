@@ -99,7 +99,7 @@
 
 1. В списке «Create studio» открывает страницу создания («New studio»).
 2. Поля: «Name», «Subdomain» (подставляется транслитом, правится), «Custom domain (optional)», «Owner e-mail», «Owner name (optional)». Кнопка «Save».
-3. Ошибки у поля (фиксировано): «This subdomain is already taken», «This subdomain is reserved», «This domain is already used by another studio», «Enter a valid e-mail address».
+3. Ошибки у поля (фиксировано): «Use 3–20 lowercase letters, digits or hyphens, starting with a letter», «This subdomain is already taken», «This subdomain is reserved», «This domain is already used by another studio», «Enter a valid e-mail address».
 4. Успех: возврат в список, новая студия видна, сообщение «Studio created» (фиксировано).
 
 ### Поток 4. Редактирование студии
@@ -133,6 +133,7 @@
 
 - Состояния студии: только Active и Deactivated. Других состояний нет.
 - Deactivated-студия не пускает владельца в свою админку и не показывает публичный сайт. Вход под студией из этой админки работает всегда.
+- Поддомен: от 3 до 20 символов, строчные латинские буквы, цифры и дефис, начинается с буквы (например, `yoga-2`). Формат проверяют и форма, и бэкенд.
 - Поддомен и свой домен уникальны среди всех студий. Зарезервированные имена поддоменов определяет бэкенд. У Deactivated-студии они остаются занятыми.
 - Вход под студией доступен только администратору платформы.
 - Токены прежнего владельца перестают работать сразу после смены владельца. Способ решает бэкенд.
