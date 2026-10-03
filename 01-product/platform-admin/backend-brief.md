@@ -12,12 +12,10 @@ Build the backend of the platform admin: the single place where the platform adm
 
 No dependencies on other briefs. Order inside this brief: first the API contract (`api-contract.md`, phase 1), then implementation. The frontend brief is issued after the contract is agreed and the design is accepted.
 
-The local development database environment must be decided before implementation starts (open item in `plan.md`).
-
 ## Source-of-truth order
 
 1. `01-product/platform-admin/overview.md` and `01-product/profile.md`
-2. `plan.md` (stack and tenant isolation decisions)
+2. `03-architecture/` (`backend-structure.md`, `api-conventions.md`, `authentication.md`) and `04-engineering-rules/backend.md`
 3. The approved design, only where it affects the API
 4. This brief, for sequencing
 
@@ -25,7 +23,7 @@ Canon wins over this brief. Where they appear to disagree, raise it in feedback 
 
 ## Current backend baseline
 
-None — new development. Verified 2026-10-02: the `studio-desk-backend` repository contains no files besides git metadata.
+Verified 2026-10-03: the Nest application foundation exists — three APIs (`src/apis/platform|studio|public`) with their guards, the common error format, Zod validation, OpenAPI, `/api/health`, PostgreSQL users per API with a grants test — and automatic deploy to the server. No platform admin features: no tables, endpoints, sign-in, or studios.
 
 ## Product behaviour (mandatory)
 
@@ -36,27 +34,26 @@ Product terms and the full flows are in the canon. These are the invariants a pl
 3. **No account enumeration.** The response to a code request is the same whether or not the e-mail has access. It always contains the code expiry time and the time at which resending becomes available.
 4. **The API lets the client tell apart:** wrong code, expired code, too many attempts, resend requested too early. The canon has a separate fixed message for each.
 5. **A studio** has a name, a unique subdomain, an optional unique custom domain, and a state: Active or Deactivated. Nothing else. A studio is a tenant. There is no physical delete.
-6. **Format and uniqueness.** The backend always validates the e-mail and the subdomain, whatever the form checks. A subdomain is 3 to 20 characters: lowercase Latin letters (a-z), digits, and hyphens, and it must start with a letter (for example `yoga-2`, `yoga-22`). The backend does not normalize: an invalid value is rejected. Subdomain and custom domain are unique across all studios, including Deactivated ones (they stay taken). Reserved subdomains cannot be used. Each failure is distinguishable: subdomain invalid, subdomain taken, subdomain reserved, domain used by another studio, e-mail invalid.
-7. **One owner per studio:** e-mail required, name optional. One e-mail may own several studios.
+6. **Format and uniqueness.** The backend always validates the name, the e-mail, the subdomain, and the custom domain, whatever the form checks. A name is 2 to 100 characters. A subdomain is 3 to 20 characters: lowercase Latin letters (a-z), digits, and hyphens, and it must start with a letter (for example `yoga-2`, `yoga-22`). A custom domain is lowercase Latin letters, digits, hyphens, and dots, with at least one dot (for example `yogaspace.com`), without `https://`, up to 253 characters, and not on the platform domain `studio-desk.axondigital.xyz`. The backend trims spaces at the edges and lowercases e-mails; it does not otherwise normalize: case and characters are not corrected, an invalid value is rejected. Subdomain and custom domain are unique across all studios, including Deactivated ones (they stay taken). Reserved subdomains cannot be used. Each failure is distinguishable: name invalid, subdomain invalid, subdomain taken, subdomain reserved, domain invalid, domain used by another studio, e-mail invalid.
+7. **One owner per studio:** e-mail only. One e-mail may own several studios.
 8. **Creation** is atomic: studio and owner together. A new studio is Active.
 9. **Only the platform administrator** can create studios and change subdomain, custom domain, and owner. Editing works in any studio state.
-10. **Owner change:** the previous owner's tokens stop working immediately. The mechanism is the backend's decision.
+10. **Owner change:** the previous owner's tokens stop working immediately. The mechanism: `03-architecture/authentication.md`.
 11. **A Deactivated studio:** its owner and staff cannot sign in, and its public site is not served (tenant lookup by host does not resolve it as an active studio). Data is kept. Activation reverses this.
 12. **Log in as studio:** only the platform administrator, immediately, for a studio in any state including Deactivated. The result is access as the studio owner. How the studio admin opens in the browser is not part of this brief.
 13. **Studio list:** fields name, subdomain, custom domain, owner e-mail, status, created. Search by name, subdomain, custom domain, owner e-mail. Filter by state. Newest first by default. Server-side pagination.
 
 ## Cross-cutting constraints
 
-Stack and tenant isolation: `plan.md` (Nest, own PostgreSQL, isolation by `studio_id` at the application level, modular monolith, OpenAPI contract). The `03-architecture/` documents are not written yet; raise conflicts in feedback.
+Stack, the three APIs, and database users: `03-architecture/backend-structure.md`. Errors, responses, lists and pagination, OpenAPI: `03-architecture/api-conventions.md`. Sign-in, tokens, sessions, revocation, and log in as studio: `03-architecture/authentication.md`. Raise conflicts in feedback.
 
 ## Decisions left to the backend
 
-Schema and naming, endpoints and methods, DTOs, error codes, indexes and constraints, transaction strategy, module structure, pagination style. Also: code lifetime, attempt and resend limits, one-time use and hashing; token format and the revocation mechanism; the reserved subdomain list; the remaining technical constraints of a DNS label for the subdomain (for example a hyphen at the end) and the format validation of the custom domain. Product behaviour above must not change because of these decisions.
+Schema and naming, endpoints and methods, DTOs, error codes, indexes and constraints, transaction strategy, module structure. Also: code lifetime, attempt and resend limits, one-time use and hashing; the reserved subdomain list; the remaining technical constraints of a DNS label for the subdomain and the custom domain (for example a hyphen at the end of a label). Product behaviour above must not change because of these decisions.
 
 ## Required research before implementation
 
 1. E-mail delivery for sign-in codes: provider, cost, free tier. The project is non-commercial for now, so the cheapest reliable option is preferred.
-2. Token revocation that makes invariant 10 hold immediately.
 
 Record the recommendation in feedback before implementing the affected part.
 
@@ -69,7 +66,7 @@ Record the recommendation in feedback before implementing the affected part.
 1. API contract for the platform admin. Needs nothing.
 2. Platform administrator and sign-in: codes, tokens, revocation. Needs phase 1.
 3. Studios: create, list, update, uniqueness, owner change. Needs phase 2.
-4. Deactivate, activate, log in as studio, host resolution for Deactivated studios. Needs phase 3.
+4. Deactivate, activate, log in as studio (including the handoff code exchange in the studio API), host resolution for Deactivated studios. Needs phase 3.
 
 ## Required tests
 

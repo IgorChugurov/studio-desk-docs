@@ -40,8 +40,9 @@ authentication). Do not restate them here.
 
 ## Decisions left to the backend
 Explicit list of what the implementer decides and documents: schema and naming, endpoints and
-methods, DTOs, error codes, indexes and constraints, transaction strategy, module structure,
-pagination. Product behaviour above must not change because of these decisions.
+methods, DTOs, error codes, indexes and constraints, transaction strategy, module structure.
+Lists and pagination, the error format, and sessions are fixed in `03-architecture/` and are not
+listed here. Product behaviour above must not change because of these decisions.
 
 ## Required research before implementation
 Points that must be investigated and the recommended solution recorded before the affected part
