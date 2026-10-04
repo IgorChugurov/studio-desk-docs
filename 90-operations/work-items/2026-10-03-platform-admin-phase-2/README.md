@@ -1,7 +1,7 @@
 ---
 id: 2026-10-03-platform-admin-phase-2
 title: Фаза 2 бэкенда админки платформы — вход по коду
-status: in-progress
+status: done
 updated_at: 2026-10-04
 ---
 
@@ -22,4 +22,12 @@ updated_at: 2026-10-04
 
 ## Этап
 
-`feature-workflow.md`, полный маршрут, этап 5 (задание бэкенду). Контракт API уже согласован в `2026-10-03-platform-admin-api-contract`. Провайдер e-mail — Resend. Вход проверен локально владельцем: код на почту и `accessToken`. Дальше владелец выкладывает на сервер. Ведёт бэкенд. Параллельно с `2026-10-02-platform-admin-design-review` (этап 4).
+`feature-workflow.md`, полный маршрут, этап 5. Завершено.
+
+## Закрытие
+
+**Результат.** В `studio-desk-backend` сделан вход администратора платформы по коду на e-mail: коды, токены, сессии, Sign out и отзыв сессии. Почта — Resend. Студии, деактивация и вход под студией не делались.
+
+**Проверка.** На сервере `https://api.studio-desk.axondigital.xyz` владелец получил `accessToken` и почту `igorchugurov@gmail.com`, затем нашёл cookie `sd_platform_refresh`. Цитата: «отлично. закрывай работу». Локально перед этим: «все работает.» Интеграционные тесты: 37 passed; модульные: 6 passed.
+
+Commits: find with `git log --grep "2026-10-03-platform-admin-phase-2"`.
