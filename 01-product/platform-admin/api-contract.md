@@ -15,7 +15,7 @@ After implementation, the live API is the OpenAPI document of the platform API (
 - **Authorization:** every endpoint requires `Authorization: Bearer <accessToken>` of a platform session, except those marked **public**. A missing, invalid, or revoked token returns `401 UNAUTHORIZED`. A studio session is not accepted.
 - **Cookie:** the refresh token is the cookie `sd_platform_refresh` with `HttpOnly; Secure; SameSite=Strict; Path=/api/platform/auth`. The frontend calls `/auth/*` with credentials included (`credentials: "include"`), because `admin.` and `api.` are different origins.
 - **`X-Requested-With`:** required on `POST /auth/refresh` and `POST /auth/sign-out`. Without it: `403 FORBIDDEN`.
-- **Formats:** dates are ISO 8601 strings in UTC. Lifetimes (`…ExpiresIn`, `…AvailableIn`) are seconds from now. IDs are UUIDs. Errors use the common format; field errors use `VALIDATION_ERROR` (`api-conventions.md`). Text fields are trimmed, e-mails are lowercased, empty optional values clear the field (`api-conventions.md`, «пустые значения»).
+- **Formats:** dates are ISO 8601 strings in UTC. Lifetimes (`…ExpiresIn`, `…AvailableIn`) are seconds from now. IDs are UUIDs. Errors use the common format; field errors use `VALIDATION_ERROR` (`api-conventions.md`). Text fields are trimmed. E-mails, subdomains, and custom domains are lowercased before the format check; an uppercase letter in them is corrected, not rejected. A name keeps its case. Empty optional values clear the field (`api-conventions.md`, «пустые значения»).
 - **Several errors:** format errors of all fields come together in one `VALIDATION_ERROR`. Checks that need the database (reserved, taken) run only when the format of all fields is valid, and return one error at a time in the order of the endpoint's table.
 
 ## Essay — sign-in
@@ -245,7 +245,7 @@ The frontend picks the text by `code` (and `field`). Fixed texts come from `over
 
 - [ ] Each endpoint matches its path, method, body, response, and status codes
 - [ ] Format errors of all fields come in one response; `409` checks follow in table order
-- [ ] E-mails are lowercased on save, search, and sign-in
+- [ ] E-mails, subdomains, and custom domains are lowercased on save and search; e-mails are lowercased on sign-in
 - [ ] Cookie name and attributes, `X-Requested-With`, and CORS match `authentication.md`
 - [ ] Identical answers for an e-mail with and without access
 - [ ] Uniqueness checks include deactivated studios
