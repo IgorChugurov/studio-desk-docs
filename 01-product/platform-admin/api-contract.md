@@ -163,7 +163,13 @@ Body: any subset of the create body. A field that is not sent is not changed; an
 - A new `owner.email` makes the person with that e-mail the owner. All sessions of the previous owner in this studio are revoked (`authentication.md`).
 - The warning before saving is shown by the frontend; the API has no separate confirmation step.
 
-`200`: `Studio`. Errors: as for create, plus `404 NOT_FOUND`.
+`200`: `Studio`. Errors: as for create, plus `404 NOT_FOUND` and, after the `409` checks of create, one more `409`:
+
+| Status | `code` | `field` | Fixed text in the canon |
+|---|---|---|---|
+| 409 | `OWNER_IS_STAFF` | `owner.email` | This e-mail is already a staff member of this studio |
+
+The e-mail of a current staff member of this studio cannot become the owner: owner and staff do not combine (`../studio-admin/overview.md`).
 
 ### `POST /studios/{id}/deactivate` and `POST /studios/{id}/activate`
 
@@ -225,6 +231,7 @@ The frontend picks the text by `code` (and `field`). Fixed texts come from `over
 | `SUBDOMAIN_RESERVED` | This subdomain is reserved |
 | `SUBDOMAIN_TAKEN` | This subdomain is already taken |
 | `DOMAIN_TAKEN` | This domain is already used by another studio |
+| `OWNER_IS_STAFF` | This e-mail is already a staff member of this studio |
 | any other error of an action or of loading the list | Something went wrong. Try again |
 
 ## Essay — how it connects
@@ -249,6 +256,7 @@ The frontend picks the text by `code` (and `field`). Fixed texts come from `over
 - [ ] Cookie name and attributes, `X-Requested-With`, and CORS match `authentication.md`
 - [ ] Identical answers for an e-mail with and without access
 - [ ] Uniqueness checks include deactivated studios
+- [ ] An e-mail of a current staff member of the studio cannot become its owner (`OWNER_IS_STAFF`)
 
 ## Open questions
 
