@@ -45,7 +45,7 @@ Screens, flows, and fixed texts are in `catalogs.md`. Data is in `catalogs-api-c
 2. Under it, a second row: Halls, Trainers, Class types. Halls is selected after opening Catalogs. The other two are empty pages with their tab selected.
 3. The halls list has search on the left and «Add hall» on the right. Search is by name. No halls: «No halls yet». A search with no hits: «No halls found», the hint, and «Reset search». There is no Back on the list.
 4. Create has Name, Address, and Video link, Back, and Save. No gallery. Empty name and empty address show their texts. An empty video link is saved. A bad video link shows «Enter a YouTube or Vimeo link». Success returns to the list with «Hall added».
-5. Edit has the same fields, Back, and Update. Success returns to the list with «Hall updated». The gallery is below the fields and shows `images` in index order. An image is an image. A video file is a `video` element whose source is `/api/files/{id}`. The add control says «Add file». Dragging reorders and then calls the reorder request. It does not save the name, address, or video link.
+5. Edit has the same fields, Back, and Update. Success returns to the list with «Hall updated». The gallery is below the fields and shows `images` in index order. An image is an image. A video file is a `video` element whose source is the file's `url` (`/files/halls/{hallId}/{fileId}` plus the type extension). The address is public. The add control says «Add file». Dragging reorders and then calls the reorder request. It does not save the name, address, or video link.
 6. Breadcrumbs: studio name, Catalogs, Halls. On add and edit the hall name is last. On add, until the hall has a name, the last crumb follows the staff add page's pattern for a page that is not saved yet.
 
 ## Cross-cutting constraints
@@ -105,7 +105,7 @@ None. The file types and the maximum size are decided in the API contract (`cata
 - A design brief and Figma.
 - Trainers, class types beyond the empty tab, and deleting a hall.
 - The staff search described in `overview.md`.
-- The public site and `Image` optimization. `files.md` is unchanged: the file is still read from `/api/files/{id}`.
+- The public site and `Image` optimization. The file address is the public `/files/…` path in `files.md`.
 - Porting the starter-kit form and upload engines.
 
 ## Quality checklist

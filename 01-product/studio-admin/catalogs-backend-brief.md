@@ -38,13 +38,13 @@ Sign-in, staff, and studio settings must keep working unchanged.
 
 Flows and fixed texts are in `catalogs.md`. File storage and the read address are in `files.md`. These are the invariants a plausible-looking implementation could break silently.
 
-1. **Access.** Only the owner and an administrator of the studio. Every hall and file request is refused for anyone else, including a trainer and an accountant. The studio is the one in the session. A hall of another studio is not readable or writable.
+1. **Access.** Only the owner and an administrator of the studio can list, create, read, and update halls, and upload, delete, and reorder files. A trainer and an accountant are refused. The studio is the one in the session. A hall of another studio is not readable or writable through these requests. The file bytes at the stored address are public. Closing a file behind a session is a later topic.
 2. **Hall.** Name and address are required. The video link may be empty. A non-empty video link is a YouTube or Vimeo address; anything else is rejected. Two halls of one studio may have the same name. There is no delete of a hall.
 3. **List.** Search is a case-insensitive substring of the name. The owner is not a special row; every hall of the studio is listed.
 4. **Files only after the hall exists.** Create does not accept files. Upload, delete, and reorder apply to a saved hall.
 5. **Index.** A new file's index equals the number of files on that hall at that moment. Several files in one upload receive consecutive indexes in upload order. Delete rewrites the remaining indexes from zero. Reorder is its own request and rewrites indexes from zero. Saving the hall's name, address, or video link does not change indexes.
-6. **Response.** A hall includes `images`: the file records of that hall, sorted by index. An image and a video are both allowed. The read address of a file is `/api/files/{id}` on the API host (`files.md`).
-7. **Who can read a file in this topic.** The owner or an administrator of the studio can read a file of a hall of that studio. The address is not made public. Visitors of the public site are outside this brief.
+6. **Response.** A hall includes `images`: the file records of that hall, sorted by index. An image and a video are both allowed. Each file includes its public address from `files.md`: `/files/halls/{hallId}/{fileId}` plus the type extension. That address is stored on the file row.
+7. **Who can read a file in this topic.** Anyone who has the address. No session. Visitors of the public site are outside this brief.
 
 ## Cross-cutting constraints
 
@@ -79,7 +79,7 @@ Each invariant above is proven by a test, in particular: a trainer and an accoun
 3. Name and address are required. The video link is optional and, when set, is a YouTube or Vimeo address.
 4. A hall cannot be deleted by any request in this brief.
 5. Files are uploaded, deleted, and reordered only on a saved hall. Indexes follow `catalogs.md`. Saving the hall fields does not change indexes.
-6. The hall response includes `images` sorted by index. A file is readable at `/api/files/{id}` by the owner or an administrator of that studio, and is not public.
+6. The hall response includes `images` sorted by index. Each file's stored address is `/files/halls/{hallId}/{fileId}` plus the type extension, and that address returns the bytes with no session.
 7. An image file and a video file can both be stored.
 8. All new tables have explicit grants and an entry in the expected-grants file; the grants test passes.
 9. Every new endpoint passes the checklist of `api-conventions.md`.
@@ -102,7 +102,7 @@ Each invariant above is proven by a test, in particular: a trainer and an accoun
 - Trainers, class types, and deleting a hall (`catalogs.md`, open questions).
 - The staff search change in `overview.md`. It is not this brief.
 - Schedule, clients, subscriptions, accounting, the public site, and client sign-in.
-- Making `/api/files/{id}` readable without a studio session. `files.md` still leaves that open for the public site.
+- Closing a file behind a session. Current files are public.
 
 ## Quality checklist
 
