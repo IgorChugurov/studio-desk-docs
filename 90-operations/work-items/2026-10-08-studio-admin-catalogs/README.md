@@ -2,7 +2,7 @@
 id: 2026-10-08-studio-admin-catalogs
 title: Каталоги админки студии — залы, тренеры, виды занятий
 status: in-progress
-updated_at: 2026-10-08
+updated_at: 2026-10-09
 ---
 
 # Каталоги админки студии — залы, тренеры, виды занятий
@@ -19,4 +19,4 @@ updated_at: 2026-10-08
 
 ## Этап
 
-`feature-workflow.md`, полный маршрут. Канон залов записан в `01-product/studio-admin/catalogs.md`. Хранение файлов — `03-architecture/files.md`. Задания: `catalogs-backend-brief.md` и `catalogs-frontend-brief.md`. Контракт API ещё не согласован. Тренеры и виды занятий не описаны.
+`feature-workflow.md`, полный маршрут. Залы сделаны. В канон зала добавлено необязательное описание. Канон тренеров и видов занятий: имя, описание, галерея. Задания: `catalogs-trainers-backend-brief.md` и `catalogs-trainers-frontend-brief.md`. Кода этих заданий ещё нет.
