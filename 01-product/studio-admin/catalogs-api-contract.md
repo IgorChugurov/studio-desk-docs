@@ -56,7 +56,7 @@ Screen texts on success are «Hall added», «Hall updated», «Trainer added»,
 
 `images` is every file of this hall, sorted by `index` ascending. The YouTube or Vimeo link is `videoLink`. It is not an item of `images`. `description` is optional text, or `null`. Search does not look at it.
 
-`type` is `ordinary` or `virtual`. It is chosen on create and never changes afterwards. A virtual hall's `address` is always exactly `Virtual hall`. `timeZone` is an IANA time-zone name from the same set as studio settings (`api-contract.md`).
+`type` is `ordinary` or `virtual`. It can be chosen on create and changed later. A virtual hall's `address` is always exactly `Virtual hall`. Changing the type to `virtual` stores that address. Changing the type to `ordinary` requires a new address. `timeZone` is an IANA time-zone name from the same set as studio settings (`api-contract.md`).
 
 `videoLink` is `null` or an `http` or `https` URL of a YouTube or Vimeo video:
 
@@ -112,18 +112,18 @@ Field errors of one request come together.
 
 `200`: `Hall`. `404 NOT_FOUND` when this studio has no such hall.
 
-### `PATCH /halls/{id}` — update name, address, time zone, description, video link
+### `PATCH /halls/{id}` — update type, name, address, time zone, description, video link
 
-Body: any subset of `name`, `address`, `timeZone`, `description`, `videoLink`. A field that is not sent is not changed. `name` and `address` cannot be cleared. `timeZone` sent must be in the studio time-zone set; it can be changed at any time. `description` and `videoLink` sent as `null` or blank become `null`.
+Body: any subset of `type`, `name`, `address`, `timeZone`, `description`, `videoLink`. A field that is not sent is not changed. `name` cannot be cleared. `timeZone` sent must be in the studio time-zone set; it can be changed at any time. `description` and `videoLink` sent as `null` or blank become `null`.
 
-`type` is immutable: a sent `type` that differs from the stored one is refused and nothing changes. A virtual hall's `address` is read-only: a sent `address` other than `Virtual hall` is refused.
+`type` can be changed. A change to `virtual` stores `address` as `Virtual hall` (any other sent address is ignored). A change to `ordinary` requires a new `address` in the same request; omitting it is refused. While the hall stays `virtual`, a sent `address` other than `Virtual hall` is refused.
 
 `200`: `Hall`. Indexes in `images` are unchanged. Screen text: «Hall updated».
 
 | Status | `code` | `field` | When |
 |---|---|---|---|
-| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `type` | sent and different from the stored type |
-| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `address` | virtual hall, and a sent `address` other than `Virtual hall` |
+| 400 | `VALIDATION_ERROR` (`REQUIRED`) | `address` | type becomes `ordinary`, and `address` is missing, `null`, or blank |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `address` | hall stays `virtual`, and a sent `address` other than `Virtual hall` |
 
 Other errors: the field errors of create for the fields that were sent, and `404 NOT_FOUND`.
 
