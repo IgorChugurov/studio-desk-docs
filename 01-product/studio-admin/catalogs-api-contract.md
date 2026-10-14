@@ -42,8 +42,10 @@ Screen texts on success are «Hall added», «Hall updated», «Trainer added»,
 ```json
 {
   "id": "9c2e…",
+  "type": "ordinary",
   "name": "Main hall",
   "address": "Hlavná 1, Bratislava",
+  "timeZone": "Europe/Bratislava",
   "description": null,
   "videoLink": null,
   "images": [],
@@ -53,6 +55,8 @@ Screen texts on success are «Hall added», «Hall updated», «Trainer added»,
 ```
 
 `images` is every file of this hall, sorted by `index` ascending. The YouTube or Vimeo link is `videoLink`. It is not an item of `images`. `description` is optional text, or `null`. Search does not look at it.
+
+`type` is `ordinary` or `virtual`. It is chosen on create and never changes afterwards. A virtual hall's `address` is always exactly `Virtual hall`. `timeZone` is an IANA time-zone name from the same set as studio settings (`api-contract.md`).
 
 `videoLink` is `null` or an `http` or `https` URL of a YouTube or Vimeo video:
 
@@ -81,20 +85,25 @@ Body:
 
 ```json
 {
+  "type": "ordinary",
   "name": "Main hall",
   "address": "Hlavná 1, Bratislava",
+  "timeZone": "Europe/Bratislava",
   "description": "",
   "videoLink": ""
 }
 ```
 
-`name` and `address` are required. `description` and `videoLink` may be omitted, empty, or `null`; that stores `null`. The body has no files. A file field is ignored because unknown fields are dropped (`api-conventions.md`).
+`name` is required. `type` may be omitted; omitted means `ordinary`. For an `ordinary` hall `address` is required; for a `virtual` hall any sent `address` is ignored and the stored value is `Virtual hall`. `timeZone` may be omitted, empty, or `null`; that stores the studio's time zone. `description` and `videoLink` may be omitted, empty, or `null`; that stores `null`. The body has no files. A file field is ignored because unknown fields are dropped (`api-conventions.md`).
 
 `201`: `Hall` with `images: []`. Screen text: «Hall added».
 
 | Status | `code` | `field` | When |
 |---|---|---|---|
-| 400 | `VALIDATION_ERROR` (`REQUIRED`) | `name`, `address` | missing, `null`, or blank |
+| 400 | `VALIDATION_ERROR` (`REQUIRED`) | `name` | missing, `null`, or blank |
+| 400 | `VALIDATION_ERROR` (`REQUIRED`) | `address` | ordinary hall, and missing, `null`, or blank |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `type` | not `ordinary` or `virtual` |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `timeZone` | non-empty and not in the studio time-zone set |
 | 400 | `VALIDATION_ERROR` (`INVALID_FORMAT`) | `videoLink` | non-empty and not a YouTube or Vimeo URL as above |
 
 Field errors of one request come together.
@@ -103,13 +112,20 @@ Field errors of one request come together.
 
 `200`: `Hall`. `404 NOT_FOUND` when this studio has no such hall.
 
-### `PATCH /halls/{id}` — update name, address, description, video link
+### `PATCH /halls/{id}` — update name, address, time zone, description, video link
 
-Body: any subset of `name`, `address`, `description`, `videoLink`. A field that is not sent is not changed. `name` and `address` cannot be cleared. `description` and `videoLink` sent as `null` or blank become `null`.
+Body: any subset of `name`, `address`, `timeZone`, `description`, `videoLink`. A field that is not sent is not changed. `name` and `address` cannot be cleared. `timeZone` sent must be in the studio time-zone set; it can be changed at any time. `description` and `videoLink` sent as `null` or blank become `null`.
+
+`type` is immutable: a sent `type` that differs from the stored one is refused and nothing changes. A virtual hall's `address` is read-only: a sent `address` other than `Virtual hall` is refused.
 
 `200`: `Hall`. Indexes in `images` are unchanged. Screen text: «Hall updated».
 
-Errors: the field errors of create for the fields that were sent, and `404 NOT_FOUND`.
+| Status | `code` | `field` | When |
+|---|---|---|---|
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `type` | sent and different from the stored type |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `address` | virtual hall, and a sent `address` other than `Virtual hall` |
+
+Other errors: the field errors of create for the fields that were sent, and `404 NOT_FOUND`.
 
 There is no `DELETE /halls/{id}`.
 
@@ -180,6 +196,7 @@ Same access, list shape, file rules, and file types as halls. Search is a case-i
   "description": null,
   "instagram": null,
   "tiktok": null,
+  "classTypeIds": [],
   "images": [],
   "createdAt": "2026-10-09T16:00:00Z",
   "updatedAt": "2026-10-09T16:00:00Z"
@@ -187,6 +204,8 @@ Same access, list shape, file rules, and file types as halls. Search is a case-i
 ```
 
 `images` uses the same shape as a hall file. `url` is `/files/trainers/{trainerId}/{fileId}` plus the type extension.
+
+`classTypeIds` is the class types this trainer teaches, as an array of class-type ids of this studio. It is the same relation as a class type's `trainerIds`: a change on either side is seen on the other. The list may be empty.
 
 `instagram` is `null` or an `http` or `https` URL whose host is `instagram.com` or `www.instagram.com` and whose path is one username. The username is letters, digits, `.` and `_`, and it is not empty. A trailing slash is allowed. Any other non-empty value is rejected. The stored text is the trimmed URL the client sent.
 
@@ -205,11 +224,12 @@ Body:
   "name": "Anna",
   "description": "",
   "instagram": "",
-  "tiktok": ""
+  "tiktok": "",
+  "classTypeIds": []
 }
 ```
 
-`name` is required. `description`, `instagram`, and `tiktok` may be omitted, empty, or `null`; that stores `null`. The body has no files.
+`name` is required. `description`, `instagram`, and `tiktok` may be omitted, empty, or `null`; that stores `null`. `classTypeIds` may be omitted (stores an empty list); each id must be a class type of this studio. The body has no files.
 
 `201`: `Trainer` with `images: []`. Screen text: «Trainer added».
 
@@ -218,6 +238,7 @@ Body:
 | 400 | `VALIDATION_ERROR` (`REQUIRED`) | `name` | missing, `null`, or blank |
 | 400 | `VALIDATION_ERROR` (`INVALID_FORMAT`) | `instagram` | non-empty and not an Instagram URL as above |
 | 400 | `VALIDATION_ERROR` (`INVALID_FORMAT`) | `tiktok` | non-empty and not a TikTok URL as above |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `classTypeIds` | an id is not a class type of this studio |
 
 Field errors of one request come together.
 
@@ -227,7 +248,7 @@ Field errors of one request come together.
 
 ### `PATCH /trainers/{id}` — update
 
-Body: any subset of `name`, `description`, `instagram`, `tiktok`. A field that is not sent is not changed. `name` cannot be cleared. The optional fields sent as `null` or blank become `null`.
+Body: any subset of `name`, `description`, `instagram`, `tiktok`, `classTypeIds`. A field that is not sent is not changed. `name` cannot be cleared. The optional text fields sent as `null` or blank become `null`. A sent `classTypeIds` replaces this trainer's links; an empty list clears them; saving it does not change file indexes.
 
 `200`: `Trainer`. Indexes in `images` are unchanged. Screen text: «Trainer updated». Errors: the field errors of create for the fields that were sent, and `404 NOT_FOUND`.
 
@@ -237,7 +258,7 @@ Body: any subset of `name`, `description`, `instagram`, `tiktok`. A field that i
 
 ## Essay — class types
 
-Same access, list shape, file rules, and file types as halls. Search is a case-insensitive substring of `name` only. Two class types of one studio may share a name. There is no `DELETE /class-types/{id}`. There is no capacity, duration, price, or group-or-individual flag.
+Same access, list shape, file rules, and file types as halls. Search is a case-insensitive substring of `name` only. Two class types of one studio may share a name. There is no `DELETE /class-types/{id}`. There is a required default duration. There is no capacity, price, or group-or-individual flag.
 
 `ClassType`:
 
@@ -246,6 +267,8 @@ Same access, list shape, file rules, and file types as halls. Search is a case-i
   "id": "7c3d…",
   "name": "Yoga",
   "description": null,
+  "defaultDuration": 60,
+  "trainerIds": [],
   "images": [],
   "createdAt": "2026-10-09T16:00:00Z",
   "updatedAt": "2026-10-09T16:00:00Z"
@@ -254,15 +277,26 @@ Same access, list shape, file rules, and file types as halls. Search is a case-i
 
 `url` of a file is `/files/class-types/{classTypeId}/{fileId}` plus the type extension.
 
+`defaultDuration` is whole minutes, from 5 to 240 in steps of 5. `trainerIds` is the trainers of this class type, as an array of trainer ids of this studio. It is the same relation as a trainer's `classTypeIds`. The list may be empty.
+
 ### `GET /class-types` — list
 
 Query: the same as `GET /halls`, with `search` on `name`. `200`: `{ "items": ClassType[], "meta": … }`. Each item includes its `images`.
 
 ### `POST /class-types` — create
 
-Body: `{ "name": "Yoga", "description": "" }`. `name` is required. `description` may be omitted, empty, or `null`; that stores `null`. The body has no files.
+Body: `{ "name": "Yoga", "description": "", "defaultDuration": 60, "trainerIds": [] }`. `name` and `defaultDuration` are required. `defaultDuration` is a whole number of minutes, from 5 to 240 in steps of 5; it is not defaulted on the backend. `description` may be omitted, empty, or `null`; that stores `null`. `trainerIds` may be omitted (stores an empty list); each id must be a trainer of this studio. The body has no files.
 
-`201`: `ClassType` with `images: []`. Screen text: «Class type added». An empty name is `400` `VALIDATION_ERROR` (`REQUIRED`) on `name`.
+`201`: `ClassType` with `images: []`. Screen text: «Class type added».
+
+| Status | `code` | `field` | When |
+|---|---|---|---|
+| 400 | `VALIDATION_ERROR` (`REQUIRED`) | `name` | missing, `null`, or blank |
+| 400 | `VALIDATION_ERROR` (`REQUIRED`) | `defaultDuration` | missing or `null` |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `defaultDuration` | not a whole number from 5 to 240 in steps of 5 |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `trainerIds` | an id is not a trainer of this studio |
+
+Both duration errors carry the text «Enter a duration from 5 to 240 minutes in steps of 5».
 
 ### `GET /class-types/{id}` — one class type
 
@@ -270,9 +304,9 @@ Body: `{ "name": "Yoga", "description": "" }`. `name` is required. `description`
 
 ### `PATCH /class-types/{id}` — update
 
-Body: any subset of `name` and `description`. A field that is not sent is not changed. `name` cannot be cleared. `description` sent as `null` or blank becomes `null`.
+Body: any subset of `name`, `description`, `defaultDuration`, `trainerIds`. A field that is not sent is not changed. `name` cannot be cleared. `description` sent as `null` or blank becomes `null`. A sent `defaultDuration` must be a whole number from 5 to 240 in steps of 5. A sent `trainerIds` replaces this class type's links; an empty list clears them; saving it does not change file indexes.
 
-`200`: `ClassType`. Indexes in `images` are unchanged. Screen text: «Class type updated». Errors: the name error of create when `name` was sent, and `404 NOT_FOUND`.
+`200`: `ClassType`. Indexes in `images` are unchanged. Screen text: «Class type updated». Errors: the create errors for the fields that were sent, and `404 NOT_FOUND`.
 
 ### Files
 
@@ -325,6 +359,15 @@ These tables were agreed by the owner on 2026-10-09.
 
 `class_type_file`: the same columns as `hall_file`, with `class_type_id` instead of `hall_id`. `storage_path` is `/files/class-types/{classTypeId}/{id}.ext`. Unique `(class_type_id, index)`.
 
+The schedule-fields extension (agreed by the owner on 2026-10-14) adds:
+
+- `hall.type` (`text`, not null, default `ordinary`, check in `ordinary`/`virtual`). A check also requires a virtual hall's `address` to equal `Virtual hall`. Existing halls become `ordinary` by the default.
+- `hall.time_zone` (`text`, not null, non-blank check, same shape as `studio.time_zone`). Existing halls are backfilled from their studio's `time_zone`.
+- `class_type.default_duration` (`integer`, not null, check `between 5 and 240 and value % 5 = 0`). Existing class types are backfilled to 60; the migration drops the temporary default so new rows must provide a value.
+- `trainer_class_type`: the many-to-many link. Columns `studio_id` (not null, references `studio.id`), `trainer_id` (not null, references `trainer.id`), `class_type_id` (not null, references `class_type.id`), `created_at`. Primary key `(trainer_id, class_type_id)`. Index on `studio_id` and on `class_type_id`. `studio_id` is the shared studio of the trainer and the class type. No delete of a trainer or class type in this topic; link rows are inserted and deleted when the list is replaced.
+
+Grants: `studio_api` keeps `SELECT, INSERT, UPDATE` on `hall` and `class_type` (the new columns need no extra grant). On `trainer_class_type` it has `SELECT, INSERT, DELETE` (a link is replaced by delete and insert; there is no updatable column). `platform_api` and `public_api` have none. The grants file and the grants test cover the new table.
+
 ## Essay — error codes and screen texts
 
 The frontend picks the text by `code` and `field`. Fixed texts are from `catalogs.md`.
@@ -333,6 +376,7 @@ The frontend picks the text by `code` and `field`. Fixed texts are from `catalog
 |---|---|
 | `VALIDATION_ERROR` (`REQUIRED`) on `name` | Enter a name |
 | `VALIDATION_ERROR` (`REQUIRED`) on `address` | Enter an address |
+| `VALIDATION_ERROR` (`REQUIRED` or `INVALID_VALUE`) on `defaultDuration` | Enter a duration from 5 to 240 minutes in steps of 5 |
 | `VALIDATION_ERROR` (`INVALID_FORMAT`) on `videoLink` | Enter a YouTube or Vimeo link |
 | `VALIDATION_ERROR` (`INVALID_FORMAT`) on `instagram` | Enter an Instagram link |
 | `VALIDATION_ERROR` (`INVALID_FORMAT`) on `tiktok` | Enter a TikTok link |
