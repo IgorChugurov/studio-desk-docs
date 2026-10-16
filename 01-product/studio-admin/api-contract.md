@@ -258,6 +258,10 @@ Body: any subset of `StudioSettings`. A field that is not sent is not changed. T
 
 Section `staff`, owner only (`403 FORBIDDEN` for others). The owner is not in the list.
 
+A staff member with the role `trainer` is linked to exactly one trainer card of this studio. The link is what lets that person open Schedule and see only the classes of that card. `GET /me` does not return the link: Schedule reads it from the session on each request. There is no separate list of free trainers. The form builds it from `GET /trainers` minus the `trainerId` values already on `GET /staff`, and keeps the current card when editing.
+
+The owner agreed this link on 2026-10-16.
+
 ### Objects
 
 `StaffMember`:
@@ -267,11 +271,12 @@ Section `staff`, owner only (`403 FORBIDDEN` for others). The owner is not in th
   "id": "2b9e…",
   "email": "olga@example.com",
   "role": "administrator",
+  "trainerId": null,
   "createdAt": "2026-10-06T10:00:00Z"
 }
 ```
 
-`role` is `administrator` or `accountant`. The `trainer` role and the link to the trainers catalog are not part of this contract; the role set is built so they can be added later.
+`role` is `administrator`, `accountant`, or `trainer`. `trainerId` is the catalog trainer id when `role` is `trainer`, and `null` otherwise. The trainer's name is not copied onto the staff member; the client reads it from `GET /trainers`.
 
 ### `GET /staff` — list
 
@@ -280,41 +285,72 @@ Query, in addition to the common list parameters (`api-conventions.md`):
 - `search`: case-insensitive substring of the e-mail.
 - `sortBy`: `createdAt` (default) or `email`.
 
-`200`: `{ "items": StaffMember[], "meta": … }` in the common list format.
+`200`: `{ "items": StaffMember[], "meta": … }` in the common list format. Each item includes `trainerId`.
 
 ### `POST /staff` — add
 
 Body:
 
 ```json
-{ "email": "olga@example.com", "role": "administrator" }
+{ "email": "olga@example.com", "role": "trainer", "trainerId": "4a1b…" }
 ```
+
+`role` `administrator` or `accountant` omits `trainerId` or sends `null`. `role` `trainer` requires `trainerId`: the id of a trainer card of this studio that is not already linked. A `trainerId` sent with `administrator` or `accountant` is refused and nothing is stored. The staff row and the link are written in one transaction.
 
 `201`: `StaffMember`. Screen text on success: «Staff member added». The person signs in by e-mail and code.
 
-Errors. All `VALIDATION_ERROR` field errors come together; the `409` checks follow in table order:
+Errors. All `VALIDATION_ERROR` field errors come together. The checks that need the database then run one at a time, in this order:
 
 | Status | `code` | `field` | Fixed text in the canon |
 |---|---|---|---|
 | 400 | `VALIDATION_ERROR` (`REQUIRED`) | `email`, `role` | — |
+| 400 | `VALIDATION_ERROR` (`REQUIRED`) | `trainerId` | Select a trainer |
 | 400 | `VALIDATION_ERROR` (`INVALID_FORMAT`) | `email` | Enter a valid e-mail address |
-| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `role` | — (not `administrator` or `accountant`) |
+| 400 | `VALIDATION_ERROR` (`INVALID_FORMAT`) | `trainerId` | — (not a UUID) |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `role` | — (not `administrator`, `accountant`, or `trainer`) |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `trainerId` | sent with `administrator` or `accountant`, or not a trainer of this studio |
 | 409 | `STAFF_ALREADY_ADDED` | `email` | This e-mail is already added to the studio |
 | 409 | `EMAIL_IS_OWNER` | `email` | This e-mail belongs to the studio owner |
+| 409 | `TRAINER_ALREADY_LINKED` | `trainerId` | This trainer is already linked to another staff member |
 
-An e-mail can be a staff member of several studios, and the owner of one studio and a staff member of another.
+An e-mail can be a staff member of several studios, and the owner of one studio and a staff member of another. The link belongs to this studio: the same catalog trainer cannot be linked twice here, and a trainer of another studio is refused.
 
 ### `GET /staff/{id}` — one staff member
 
 `200`: `StaffMember`. `404 NOT_FOUND` if there is no such staff member in this studio.
 
-### `PATCH /staff/{id}` — change the role
+### `PATCH /staff/{id}` — change the role and the link
 
-Body: `{ "role": "accountant" }`. `200`: `StaffMember`. The e-mail does not change. The new role acts from the next request. Screen text on success: «Staff member updated». Errors: the `role` errors of create, and `404 NOT_FOUND`.
+Body: any subset of `role` and `trainerId`. A field that is not sent is not changed. The e-mail does not change. The new role acts from the next request.
+
+- Becoming `trainer` requires `trainerId` in this request.
+- Staying `trainer`: an omitted `trainerId` keeps the current card; a sent `trainerId` replaces it; `null` is refused (`REQUIRED`).
+- Becoming `administrator` or `accountant` removes the link. A `trainerId` sent on that request is refused and nothing changes.
+
+The staff row and the link are written in one transaction. `200`: `StaffMember`. Screen text on success: «Staff member updated». Errors: the field and `409` errors of create for the fields that apply, and `404 NOT_FOUND`. Linking the card this member already has is not `TRAINER_ALREADY_LINKED`.
 
 ### `DELETE /staff/{id}` — remove
 
-`204`. All sessions of this person in this studio are revoked at once; sessions of the same e-mail in other studios are not affected. The person can be added again. Screen text on success: «Staff member removed». `404 NOT_FOUND` if there is no such staff member in this studio.
+`204`. The link row is deleted. The trainer card stays. All sessions of this person in this studio are revoked at once; sessions of the same e-mail in other studios are not affected. The person can be added again. Screen text on success: «Staff member removed». `404 NOT_FOUND` if there is no such staff member in this studio.
+
+### Tables
+
+Agreed by the owner on 2026-10-16. This is the structure the link is stored in. It is not the HTTP contract.
+
+`studio_staff.role` accepts `administrator`, `accountant`, and `trainer`.
+
+`staff_trainer`
+
+| Column | |
+|---|---|
+| `studio_id` | uuid, not null, references `studio.id` |
+| `staff_id` | uuid, primary key, references `studio_staff.id`. One row per staff member. Deleting the staff member deletes this row |
+| `trainer_id` | uuid, not null, references `trainer.id`, unique. One catalog trainer has at most one staff member. Deleting that trainer is refused while the row exists |
+| `created_at` | timestamptz, not null |
+
+Index on `studio_id`. No copy of the trainer's name. The link is inserted and deleted with the staff member; replacing the card updates `trainer_id`.
+
+Grants: `studio_api` has `SELECT, INSERT, UPDATE, DELETE` on `staff_trainer`. `platform_api` and `public_api` have none. The grants file and the grants test cover the table.
 
 ## Essay — error codes and screen texts
 
@@ -333,6 +369,8 @@ The frontend picks the text by `code` (and `field`). Fixed texts come from `over
 | `FORBIDDEN` on a section | You don't have access to this page |
 | `STAFF_ALREADY_ADDED` | This e-mail is already added to the studio |
 | `EMAIL_IS_OWNER` | This e-mail belongs to the studio owner |
+| `VALIDATION_ERROR` (`REQUIRED`) on `trainerId` | Select a trainer |
+| `TRAINER_ALREADY_LINKED` | This trainer is already linked to another staff member |
 | any other error of an action or of loading | Something went wrong. Try again |
 
 ## Essay — how it connects
@@ -350,7 +388,8 @@ The frontend picks the text by `code` (and `field`). Fixed texts come from `over
 - The response to `POST /auth/code` and the errors of `POST /auth/sign-in` never reveal whether an e-mail has access to any studio.
 - A session of the studio API never changes its studio: selection and switching create a new session.
 - Role and rights are read from the database on every request, not taken from the token.
-- No endpoint deletes a studio, changes the owner, or assigns the `trainer` role.
+- No endpoint deletes a studio or changes the owner.
+- The `trainer` role is assigned only together with one catalog trainer of this studio. `administrator` and `accountant` have no link.
 
 ## Agent — acceptance checklist
 
@@ -364,6 +403,10 @@ The frontend picks the text by `code` (and `field`). Fixed texts come from `over
 - [ ] `GET /me` shows the role, sections, and studios read from the database
 - [ ] Studio settings and staff are rejected for every role except the owner
 - [ ] Removing a staff member revokes their sessions in this studio only
+- [ ] A `trainer` staff member stores exactly one catalog trainer of this studio; `trainerId` is `null` for the other roles
+- [ ] A missing trainer on that role is «Select a trainer». A trainer already linked is «This trainer is already linked to another staff member»
+- [ ] Changing the role away from `trainer` removes the link. Removing the staff member removes the link and keeps the trainer card
+- [ ] `GET /me` does not return the trainer link
 
 ## Open questions
 
