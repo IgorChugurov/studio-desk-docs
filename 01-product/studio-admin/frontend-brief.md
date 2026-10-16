@@ -53,7 +53,7 @@ Screens, flows, and fixed texts are in `overview.md`. Data is in `api-contract.m
 12. **The tab row lists only `sections` from `GET /me`.** A direct address of a section that is not in the list shows «You don't have access to this page». Schedule, Catalogs, Clients and bookings, Subscriptions, and Accounting and reports are empty pages with their tab selected.
 13. **The interface language** is `interfaceLanguage` from `GET /me` (`null` means English). Changing it calls `PATCH /me/language`, the screen updates without a reload, and the page writes the cookie copy after the response. The server does not set that cookie. The sign-in and studio-selection screens read the copy and have no language control.
 14. **Studio settings** send only fields that changed. «Save» is enabled only when a value has changed. There is no Back on that page.
-15. **Staff in this brief** adds and edits `administrator` and `accountant` only. The trainer role, the Trainer column, and the trainer field wait for the catalogs topic (`overview.md`, `api-contract.md`). Remove deletes the row. There is no disabled state.
+15. **Staff in this brief** adds and edits `administrator` and `accountant` only. The trainer role, the Trainer column, and the trainer field are `staff-trainer-frontend-brief.md`. Remove deletes the row. There is no disabled state.
 16. **Interface texts come from language dictionaries.** No phrase is written into the code. English in `overview.md` is the source. Slovak and Ukrainian are prepared in the implementation and checked by the owner. The platform admin stays English only.
 17. **The sign-out** calls the API and always returns to the sign-in screen, also when the call fails.
 18. **On a narrow screen** the tab row scrolls horizontally and does not reflow. Breadcrumbs stay in the navbar. The studio name hides when they do not fit.
@@ -126,7 +126,7 @@ None.
 ## Out of scope
 
 - The insides of Schedule, Catalogs, Clients and bookings, Subscriptions, and Accounting and reports. Their tabs are empty pages.
-- The trainer role, the Trainer column, and the link to a catalog trainer.
+- The trainer role, the Trainer column, and the link to a catalog trainer. Owned by `staff-trainer-frontend-brief.md`.
 - The platform admin, except the host split that must keep it working.
 - The public site and client sign-in.
 - A design assignment and Figma for this surface.
