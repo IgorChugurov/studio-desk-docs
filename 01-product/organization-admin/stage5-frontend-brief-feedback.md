@@ -1,0 +1,15 @@
+# Stage 5 feedback — Catalogs and Schedule
+
+`pnpm lint`, `pnpm format:check`, and `pnpm test` in `studio-desk-frontend` passed. Lint exits 0 with the existing `next/no-img-element` warning in `src/studio/catalogs/hall-gallery.tsx`. Tests: 26 files, 169 passed.
+
+Catalogs is one list and one form. Tabs come from `catalogConfig.resourceTypes` in the interface language. `/catalogs` opens the first type by `sortOrder`. The other URLs are `/catalogs/[typeId]`, `/catalogs/[typeId]/new`, and `/catalogs/[typeId]/[resourceId]`. The old hall, trainer, and class-type pages and clients are gone.
+
+The catalog client calls `GET /resources?resourceTypeId=`, `POST /resources`, `GET /resources/:id`, `PATCH /resources/:id`, and `/resources/:id/files` (including `/:fileId` and `/order`). Columns and fields follow the active type: name always; geography adds type, address, and time zone; duration adds default duration; showcase adds description, video, Instagram, TikTok, and the gallery on edit; skills adds a multi-select per other skills type. A virtual place address is the read-only “Virtual place” and clears when the type returns to ordinary. `409 RESOURCE_BUSY` on a time-zone change shows the busy sentence and does not save. Editing a place or a resource embeds the week grid for that resource.
+
+Schedule is `/schedule` plus Templates at `/schedule/templates`, `/schedule/templates/new`, and `/schedule/templates/[id]`. The grid calls `/schedule-slots` (`GET`, `POST`, `PATCH /:id`, `POST /:id/cancel`, `POST /:id/restore`, `DELETE /:id`, `POST /:id/replace`). Column types are place and resource; filters include offering. One place resource and another resource type default the columns to that second type. One place resource is selected automatically and the place field is hidden.
+
+A service slot uses the configured resource selectors, duration 5–1440 step 5, and audience, format, and places only when those schedule flags are on. A block slot has no offering; “Block entire organization” sends `blocksAll` and spans every column. `409 RESOURCE_BUSY` stays in the modal with no bypass. `409 OVERLAP_WARNING` lists the overlaps and “Save anyway” resubmits with `confirmOverlap: true`. Statuses come from `scheduleConfig.statuses`. Inactive slots are a side stripe or an inactive card; a future one can be restored or deleted. A past service can be set to completed or no-show when those statuses are enabled.
+
+Week actions call `/weeks/apply`, `/weeks/clear`, and `/weeks/replace`, show the preview counts, and resolve `409 WEEK_CONFLICTS` with Keep existing or Apply new. They are hidden for a specialist and on an embedded resource page. Templates edit service and block rows by weekday on a dateless week.
+
+The running dev server was stopped. While both `catalogs/[id]` and `catalogs/[typeId]` existed, Next refused to reload routes (`id` !== `typeId`). Only `[typeId]` remains. `/api/organization` still proxies to `localhost:3000`, and that connection is refused, so the new screens were not clicked against a live API.
