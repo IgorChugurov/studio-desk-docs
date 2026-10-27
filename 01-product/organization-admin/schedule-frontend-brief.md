@@ -4,7 +4,7 @@
 >
 > **Design.** The owner did not ask for a design assignment. There is no design brief and no Figma. Behaviour, layout, and fixed texts are `schedule.md`. Lists, forms, and confirmations follow `../../02-design/flow-design.md`. Components and tokens come from the kit already used by the studio admin. What `schedule.md` leaves to a designer (colour, size, type, the look of a card, a strip, a day header, and the conflict and cancelled windows) is decided by that kit, not by a new drawing.
 >
-> **API.** `schedule-api-contract.md` does not exist yet. It is phase 1 of `schedule-backend-brief.md`. No screen that calls the schedule API is built before the owner has agreed that contract. A finished schedule backend is not required for the screen mapping.
+> **API.** `schedule-api-contract.md` is agreed. The week grid and the class window are `schedule-week-frontend-brief.md`. Templates, week actions, and the hall and trainer pages stay in the phases below.
 
 **Derived from:** `schedule.md`, `catalogs.md`, `overview.md`, `../../02-design/flow-design.md`
 **Figma:** none

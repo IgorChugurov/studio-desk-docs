@@ -1,7 +1,7 @@
 # Файлы
 
 **Scope:** где StudioDesk хранит загруженные файлы и как браузер их получает.
-**Last verified:** 2026-10-08
+**Last verified:** 2026-10-27
 
 ## Эссе — что это
 
@@ -20,16 +20,17 @@
 
 Адрес файла пишется в базу и совпадает с путём внутри папки хранения:
 
-`/files/halls/{id зала}/{id файла}.jpg`
+- ресурс: `/files/resources/{resourceId}/{fileId}.jpg`
+- вид услуги: `/files/service-types/{serviceTypeId}/{fileId}.jpg`
 
 Расширение берётся из типа: `.jpg`, `.png`, `.webp`, `.gif`, `.mp4`, `.webm`.
 
-- Локально: `http://localhost:3000/files/halls/…/….jpg`
-- На сервере: `https://api.studio-desk.axondigital.xyz/files/halls/…/….jpg`
+- Локально: `http://localhost:3000/files/resources/…/….jpg`
+- На сервере: `https://api.studio-desk.axondigital.xyz/files/resources/…/….jpg`
 
 На сервере nginx передаёт этот запрос бэкенду так же, как остальные запросы API. Отдельной раздачи папки через nginx нет. Файл открывается без сессии.
 
-Пути файлов тренера и вида занятия — в `../01-product/studio-admin/catalogs.md`. Правила те же: публичный адрес в базе, без сессии.
+Подробные правила файлов ресурсов и видов услуг — в `../01-product/organization-admin/catalogs.md` и `../01-product/organization-admin/catalogs-api-contract.md`.
 
 ## Эссе — когда файл загружается
 
@@ -39,6 +40,7 @@
 
 - Устройство бэкенда: `backend-structure.md`.
 - Сервер, `/opt/studio-desk/` и nginx: `deployment.md`.
+- Каталоги организации: `../01-product/organization-admin/catalogs.md`.
 
 ## Агент — правила
 
@@ -52,4 +54,3 @@
 ## Открытые вопросы
 
 - Закрытие отдельных файлов сессией. Сейчас файлы публичные.
-- Адрес запроса, которым файл загружается, для тренера и вида занятия. Для зала это `POST /api/studio/halls/{id}/files`. Публичный адрес этих файлов уже назван в `catalogs.md`.

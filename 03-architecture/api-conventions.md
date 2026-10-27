@@ -98,7 +98,7 @@
 
 У каждого API свой документ OpenAPI, который строится автоматически из кода и схем Zod. Документ доступен страницей в браузере и JSON-файлом. Из JSON фронтенд генерирует типы.
 
-Страница — `/api/<platform|studio|public>/docs`, JSON — `/api/<platform|studio|public>/docs/json`.
+Страница — `/api/<platform|organization|public>/docs`, JSON — `/api/<platform|organization|public>/docs/json`.
 
 Документация доступна только локально и в тестовом окружении. На сервере выключена.
 

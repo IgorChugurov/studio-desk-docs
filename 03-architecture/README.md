@@ -7,5 +7,5 @@
 | [`backend-structure.md`](./backend-structure.md) | Устройство бэкенда: три API, два слоя защиты данных, пользователи PostgreSQL, окружение и сервер |
 | [`api-conventions.md`](./api-conventions.md) | Общие правила API для бэкенда и фронтенда: проверка данных, формат ошибок, ответы, OpenAPI, `/api/health` |
 | [`deployment.md`](./deployment.md) | Адреса, сервер, автоматическое развёртывание бэкенда |
-| [`authentication.md`](./authentication.md) | Вход по коду, токены и сессии, выход, немедленный отзыв, вход под студией |
+| [`authentication.md`](./authentication.md) | Вход по коду, токены и сессии, выход, немедленный отзыв, вход под организацией |
 | [`files.md`](./files.md) | Где лежат загруженные файлы и как браузер их получает |
