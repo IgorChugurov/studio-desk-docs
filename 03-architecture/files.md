@@ -20,8 +20,7 @@
 
 Адрес файла пишется в базу и совпадает с путём внутри папки хранения:
 
-- ресурс: `/files/resources/{resourceId}/{fileId}.jpg`
-- вид услуги: `/files/service-types/{serviceTypeId}/{fileId}.jpg`
+`/files/resources/{resourceId}/{fileId}.jpg`
 
 Расширение берётся из типа: `.jpg`, `.png`, `.webp`, `.gif`, `.mp4`, `.webm`.
 
@@ -30,7 +29,7 @@
 
 На сервере nginx передаёт этот запрос бэкенду так же, как остальные запросы API. Отдельной раздачи папки через nginx нет. Файл открывается без сессии.
 
-Подробные правила файлов ресурсов и видов услуг — в `../01-product/organization-admin/catalogs.md` и `../01-product/organization-admin/catalogs-api-contract.md`.
+Подробные правила файлов ресурсов — в `../01-product/organization-admin/catalogs.md` и `../01-product/organization-admin/catalogs-api-contract.md`.
 
 ## Эссе — когда файл загружается
 

@@ -42,57 +42,76 @@ It is the same shape as the exchange response in `../platform-admin/api-contract
 
 `Language`: `en`, `sk`, `uk`.
 
-`OrganizationConfig`, the organization's own resource and service configuration (copied from its preset on creation and editable in `Organization settings`):
+`OrganizationConfig`, the organization's own modular configuration (copied from its preset on creation and editable in `Organization settings`):
 
 ```json
 {
-  "serviceConfig": {
-    "labels": {
-      "en": { "singular": "Class type", "plural": "Class types" },
-      "sk": { "singular": "Typ lekcie", "plural": "Typy lekcií" },
-      "uk": { "singular": "Вид заняття", "plural": "Види занять" }
-    },
+  "catalogConfig": {
+    "resourceTypes": [
+      {
+        "id": "rt1…",
+        "sortOrder": 0,
+        "role": "place",
+        "labels": {
+          "en": { "singular": "Hall", "plural": "Halls" },
+          "sk": { "singular": "Sála", "plural": "Sály" },
+          "uk": { "singular": "Зал", "plural": "Зали" }
+        },
+        "geography": true,
+        "duration": false,
+        "showcase": true,
+        "person": false,
+        "skills": false,
+        "required": true,
+        "multiple": false,
+        "conflictMode": "strict"
+      },
+      {
+        "id": "rt2…",
+        "sortOrder": 1,
+        "role": "resource",
+        "labels": {
+          "en": { "singular": "Trainer", "plural": "Trainers" },
+          "sk": { "singular": "Trenér", "plural": "Trenéri" },
+          "uk": { "singular": "Тренер", "plural": "Тренери" }
+        },
+        "geography": false,
+        "duration": false,
+        "showcase": true,
+        "person": true,
+        "skills": true,
+        "required": true,
+        "multiple": true,
+        "conflictMode": "strict"
+      },
+      {
+        "id": "rt3…",
+        "sortOrder": 2,
+        "role": "offering",
+        "labels": {
+          "en": { "singular": "Class type", "plural": "Class types" },
+          "sk": { "singular": "Typ lekcie", "plural": "Typy lekcií" },
+          "uk": { "singular": "Вид заняття", "plural": "Види занять" }
+        },
+        "geography": false,
+        "duration": true,
+        "showcase": true,
+        "person": false,
+        "skills": true,
+        "required": true,
+        "multiple": false,
+        "conflictMode": "none"
+      }
+    ]
+  },
+  "scheduleConfig": {
     "audienceEnabled": true,
     "formatEnabled": true,
-    "statuses": ["planned", "cancelled"],
-    "settlementMode": "subscription"
+    "statuses": ["planned", "cancelled"]
   },
-  "resourceTypes": [
-    {
-      "id": "rt1…",
-      "sortOrder": 0,
-      "role": "place",
-      "labels": {
-        "en": { "singular": "Hall", "plural": "Halls" },
-        "sk": { "singular": "Sála", "plural": "Sály" },
-        "uk": { "singular": "Зал", "plural": "Зали" }
-      },
-      "showcase": true,
-      "geography": true,
-      "person": false,
-      "skills": false,
-      "required": true,
-      "multiple": false,
-      "conflictMode": "strict"
-    },
-    {
-      "id": "rt2…",
-      "sortOrder": 1,
-      "role": "resource",
-      "labels": {
-        "en": { "singular": "Trainer", "plural": "Trainers" },
-        "sk": { "singular": "Trenér", "plural": "Trenéri" },
-        "uk": { "singular": "Тренер", "plural": "Тренери" }
-      },
-      "showcase": true,
-      "geography": false,
-      "person": true,
-      "skills": true,
-      "required": true,
-      "multiple": true,
-      "conflictMode": "strict"
-    }
-  ]
+  "billingConfig": {
+    "settlementMode": "subscription"
+  }
 }
 ```
 
@@ -228,7 +247,11 @@ Any organization session. `200`:
   "organization": { "id": "6f1c…", "name": "Yoga Space" },
   "role": "owner",
   "sections": ["schedule", "catalogs", "clients", "subscriptions", "accounting", "organization-settings", "staff"],
-  "config": { "serviceConfig": { "…": "…" }, "resourceTypes": [{ "…": "…" }] },
+  "config": {
+    "catalogConfig": { "resourceTypes": [{ "…": "…" }] },
+    "scheduleConfig": { "…": "…" },
+    "billingConfig": { "…": "…" }
+  },
   "impersonated": false,
   "organizations": [{ "id": "6f1c…", "name": "Yoga Space" }]
 }
@@ -269,8 +292,9 @@ Section `organization-settings`, owner only (`403 FORBIDDEN` for others).
   "country": "SK",
   "currency": "EUR",
   "timeZone": "Europe/Bratislava",
-  "serviceConfig": { "…": "…" },
-  "resourceTypes": [{ "…": "…" }]
+  "catalogConfig": { "resourceTypes": [{ "…": "…" }] },
+  "scheduleConfig": { "…": "…" },
+  "billingConfig": { "…": "…" }
 }
 ```
 
@@ -278,7 +302,7 @@ Section `organization-settings`, owner only (`403 FORBIDDEN` for others).
 - `country`: ISO 3166-1 alpha-2 code, upper case.
 - `currency`: code from the table of allowed currencies in the database (`EUR`, `UAH`, `USD`).
 - `timeZone`: IANA time zone name.
-- `serviceConfig` and `resourceTypes`: the organization's own resource and service configuration (`OrganizationConfig`).
+- `catalogConfig`, `scheduleConfig`, and `billingConfig`: the organization's own modular configuration (`OrganizationConfig`).
 
 ### `GET /settings`
 
@@ -303,8 +327,8 @@ Body: any subset of `OrganizationSettings`. A field that is not sent is not chan
 | Status | `code` | `field` | When |
 |---|---|---|---|
 | 400 | `VALIDATION_ERROR` (`REQUIRED`) | `language`, `country`, `currency`, `timeZone` | sent as `null` or empty |
-| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `language`, `country`, `currency`, `timeZone`, `serviceConfig`, `resourceTypes` | value is outside its allowed set or violates resource type invariants |
-| 409 | `RESOURCE_TYPE_IN_USE` | `resourceTypes` | attempting to delete a resource type that has resources or disable `person` on a resource type linked to a staff member |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `language`, `country`, `currency`, `timeZone`, `catalogConfig`, `scheduleConfig`, `billingConfig` | value is outside its allowed set or violates resource type invariants |
+| 409 | `RESOURCE_TYPE_IN_USE` | `catalogConfig.resourceTypes` | attempting to delete a resource type that has resources or disable `person` on a resource type linked to a staff member |
 
 ## Essay — staff
 

@@ -1,6 +1,6 @@
 # API contract — Platform admin
 
-**Scope:** the HTTP API of the platform admin (`/api/platform`): sign-in, presets, organizations, deactivation and activation, log in as organization; plus the one organization API endpoint that log in as organization needs (handoff code exchange).
+**Scope:** the HTTP API of the platform admin (`/api/platform`): sign-in, modular organization presets, organizations, deactivation and activation, log in as organization; plus the one organization API endpoint that log in as organization needs (handoff code exchange).
 **Derived from:** `overview.md`, `backend-brief.md`, `../../03-architecture/api-conventions.md`, `../../03-architecture/authentication.md`
 
 ## Essay — what this is
@@ -37,8 +37,6 @@ Body:
 }
 ```
 
-Both values are seconds from now. The code is always 6 digits. The same endpoint is used to resend; a new code replaces the previous one and gives a full set of attempts, also after `TOO_MANY_ATTEMPTS`. A code is e-mailed only if the e-mail is the platform administrator's.
-
 | Status | `code` | `field` | When |
 |---|---|---|---|
 | 400 | `VALIDATION_ERROR` (`INVALID_FORMAT`) | `email` | e-mail format is invalid |
@@ -62,8 +60,6 @@ Body:
 }
 ```
 
-Errors, in check order:
-
 | Status | `code` | When |
 |---|---|---|
 | 400 | `VALIDATION_ERROR` | e-mail or code format is invalid |
@@ -71,24 +67,20 @@ Errors, in check order:
 | 400 | `CODE_EXPIRED` | the code has expired |
 | 400 | `INVALID_CODE` | the code is wrong, or there is no code for this e-mail |
 
-For an e-mail without access, the answers must be indistinguishable from those for the administrator's e-mail with a wrong code (including `CODE_EXPIRED` and `TOO_MANY_ATTEMPTS` timing).
-
 ### `POST /auth/refresh` — new tokens (public, cookie)
 
-No body. Requires the cookie and `X-Requested-With`.
-
-`200`, the same body as sign-in, and a new `Set-Cookie`.
+No body. Requires the cookie and `X-Requested-With`. `200`, the same body as sign-in, and a new `Set-Cookie`.
 
 | Status | `code` | When |
 |---|---|---|
-| 401 | `UNAUTHORIZED` | no cookie: the user has not signed in; the frontend shows the sign-in screen without a message |
-| 401 | `SESSION_EXPIRED` | session expired, revoked, or the refresh token was reused; the cookie is cleared |
+| 401 | `UNAUTHORIZED` | no cookie |
+| 401 | `SESSION_EXPIRED` | session expired, revoked, or refresh token reused |
 
 ### `POST /auth/sign-out` — sign out (public, cookie)
 
-No body. Requires `X-Requested-With`. Revokes the session of the cookie and clears the cookie. `204` always, also without a cookie or for an already revoked session.
+No body. Requires `X-Requested-With`. Revokes the session of the cookie and clears the cookie. `204` always.
 
-## Essay — presets
+## Essay — presets (modular organization blueprints)
 
 ### Objects
 
@@ -104,27 +96,16 @@ No body. Requires `X-Requested-With`. Revokes the session of the cookie and clea
 
 `Section`: `schedule`, `catalogs`, `clients`, `subscriptions`, `accounting`, `organization-settings`, `staff`.
 
-`SlotStatus`: `planned`, `confirmed`, `in_progress`, `completed`, `cancelled`, `no_show`. `planned` and `cancelled` are always present.
-
-`SettlementMode`: `subscription`, `direct_check`, `external_order`.
+`ResourceRole`:
+- `place` — location and time-zone anchor (exactly one per preset);
+- `resource` — specialist or equipment occupied during a slot;
+- `offering` — service, work type, or class type performed during a slot.
 
 `ConflictMode`: `strict`, `warning`, `none`.
 
-`ServiceConfig`:
+`SlotStatus`: `planned`, `confirmed`, `in_progress`, `completed`, `cancelled`, `no_show`. `planned` and `cancelled` are always present.
 
-```json
-{
-  "labels": {
-    "en": { "singular": "Class type", "plural": "Class types" },
-    "sk": { "singular": "Typ lekcie", "plural": "Typy lekcií" },
-    "uk": { "singular": "Вид заняття", "plural": "Види занять" }
-  },
-  "audienceEnabled": true,
-  "formatEnabled": true,
-  "statuses": ["planned", "cancelled"],
-  "settlementMode": "subscription"
-}
-```
+`SettlementMode`: `subscription`, `direct_check`, `external_order`.
 
 `ResourceTypeConfig`:
 
@@ -137,8 +118,9 @@ No body. Requires `X-Requested-With`. Revokes the session of the cookie and clea
     "sk": { "singular": "Sála", "plural": "Sály" },
     "uk": { "singular": "Зал", "plural": "Зали" }
   },
-  "showcase": true,
   "geography": true,
+  "duration": false,
+  "showcase": true,
   "person": false,
   "skills": false,
   "required": true,
@@ -147,8 +129,35 @@ No body. Requires `X-Requested-With`. Revokes the session of the cookie and clea
 }
 ```
 
-- Every preset has at least one `ResourceTypeConfig` and **exactly one** item with `role: "place"` (`geography: true`, `required: true`, `multiple: false`).
-- Items with `role: "resource"` have `geography: false`.
+- Every preset has at least one `ResourceTypeConfig` in `catalogConfig.resourceTypes` and **exactly one** item with `role: "place"` (`geography: true`, `duration: false`, `person: false`, `required: true`, `multiple: false`).
+- Items with `role: "resource"` have `geography: false` and `duration: false`.
+- Items with `role: "offering"` have `duration: true`, `geography: false`, `person: false`, and `conflictMode: "none"`.
+
+`CatalogConfig`:
+
+```json
+{
+  "resourceTypes": [{ "…": "…" }]
+}
+```
+
+`ScheduleConfig`:
+
+```json
+{
+  "audienceEnabled": true,
+  "formatEnabled": true,
+  "statuses": ["planned", "cancelled"]
+}
+```
+
+`BillingConfig`:
+
+```json
+{
+  "settlementMode": "subscription"
+}
+```
 
 `Preset`:
 
@@ -158,8 +167,15 @@ No body. Requires `X-Requested-With`. Revokes the session of the cookie and clea
   "name": "Fitness Studio",
   "description": "Group and personal classes in halls and online",
   "sections": ["schedule", "catalogs", "clients", "subscriptions", "accounting", "organization-settings", "staff"],
-  "serviceConfig": { "…": "…" },
-  "resourceTypes": [{ "…": "…" }],
+  "catalogConfig": { "resourceTypes": [{ "…": "…" }] },
+  "scheduleConfig": {
+    "audienceEnabled": true,
+    "formatEnabled": true,
+    "statuses": ["planned", "cancelled"]
+  },
+  "billingConfig": {
+    "settlementMode": "subscription"
+  },
   "createdAt": "2026-10-27T10:00:00Z",
   "updatedAt": "2026-10-27T10:00:00Z"
 }
@@ -175,7 +191,7 @@ Query, in addition to the common list parameters (`api-conventions.md`):
 
 ### `POST /presets` — create
 
-Body: `name`, `description` (optional), `sections`, `serviceConfig`, `resourceTypes`.
+Body: `name`, `description` (optional), `sections`, `catalogConfig`, `scheduleConfig`, `billingConfig`.
 
 `201`: `Preset`. Screen text: «Preset created».
 
@@ -183,8 +199,8 @@ Body: `name`, `description` (optional), `sections`, `serviceConfig`, `resourceTy
 |---|---|---|---|
 | 400 | `VALIDATION_ERROR` (`REQUIRED` / `INVALID_FORMAT`) | `name` | Use 2–100 characters |
 | 400 | `VALIDATION_ERROR` (`REQUIRED`) | `sections` | Select at least one section |
-| 400 | `VALIDATION_ERROR` (`REQUIRED`) | `serviceConfig.labels`, `resourceTypes[].labels` | Enter all language labels |
-| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `resourceTypes` | Exactly one place resource type is required |
+| 400 | `VALIDATION_ERROR` (`REQUIRED`) | `catalogConfig.resourceTypes[].labels` | Enter all language labels |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `catalogConfig.resourceTypes` | Exactly one place resource type is required |
 | 409 | `PRESET_NAME_TAKEN` | `name` | This preset name is already taken |
 
 ### `GET /presets/{id}` — one preset
@@ -224,21 +240,16 @@ No body. Creates a copy of the preset with a unique name (`{name} (copy)`, or `{
 }
 ```
 
-- `status`: `active` or `deactivated`.
-- `customDomain`: string or `null`.
-- `preset`: `{ "id": string | null, "name": string }` — read-only reference to the preset used when the organization was created.
-
 `OrganizationListItem`: `id`, `name`, `preset`, `subdomain`, `customDomain`, `owner`, `status`, `createdAt`.
 
 ### `GET /organizations` — list
 
 Query, in addition to the common list parameters (`api-conventions.md`):
-
 - `status`: `active` (default) or `deactivated`.
 - `search`: case-insensitive substring of name, subdomain, custom domain, or owner e-mail.
 - `sortBy`: `createdAt` only.
 
-`200`: `{ "items": OrganizationListItem[], "meta": … }` in the common list format.
+`200`: `{ "items": OrganizationListItem[], "meta": … }`.
 
 ### `POST /organizations` — create
 
@@ -254,9 +265,7 @@ Body:
 }
 ```
 
-`customDomain` is optional. The organization, its owner, and its copied configuration (sections, `serviceConfig`, `resourceTypes` from the chosen preset) are created together in one transaction; the new organization is `active`. `201`: `Organization`. Screen text: «Organization created».
-
-Errors. All `VALIDATION_ERROR` field errors come together; the `409` checks follow in table order:
+The organization, its owner, and its copied modular configuration (`sections`, `catalogConfig`, `scheduleConfig`, `billingConfig` from the chosen preset) are created together in one transaction; the new organization is `active`. `201`: `Organization`. Screen text: «Organization created».
 
 | Status | `code` | `field` | Fixed text in the canon |
 |---|---|---|---|
@@ -265,124 +274,29 @@ Errors. All `VALIDATION_ERROR` field errors come together; the `409` checks foll
 | 400 | `VALIDATION_ERROR` (`INVALID_FORMAT`) | `subdomain` | Use 3–20 lowercase letters, digits or hyphens, starting with a letter |
 | 400 | `VALIDATION_ERROR` (`INVALID_FORMAT`) | `customDomain` | Enter a valid domain, for example yogaspace.com |
 | 400 | `VALIDATION_ERROR` (`INVALID_FORMAT`) | `owner.email` | Enter a valid e-mail address |
-| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `presetId` | Select a preset (when preset does not exist) |
+| 400 | `VALIDATION_ERROR` (`INVALID_VALUE`) | `presetId` | Select a preset |
 | 409 | `SUBDOMAIN_RESERVED` | `subdomain` | This subdomain is reserved |
 | 409 | `SUBDOMAIN_TAKEN` | `subdomain` | This subdomain is already taken |
 | 409 | `DOMAIN_TAKEN` | `customDomain` | This domain is already used by another organization |
 
-Uniqueness counts organizations in any state. A custom domain on the platform domain `studio-desk.axondigital.xyz` is an invalid format.
+### `GET /organizations/{id}` and `PATCH /organizations/{id}`
 
-### `GET /organizations/{id}` — one organization
-
-`200`: `Organization`. `404 NOT_FOUND` if there is no such organization.
-
-### `PATCH /organizations/{id}` — update
-
-Body: any subset of `name`, `subdomain`, `customDomain`, `owner`, and `sections`. `presetId` cannot be changed on an existing organization. A field that is not sent is not changed; an empty `customDomain` removes the custom domain. Works in any organization state.
-
-- A new `owner.email` makes the person with that e-mail the owner. All sessions of the previous owner in this organization are revoked (`authentication.md`).
-- `sections` updates the organization's enabled sections (`organization_section`); at least one section must remain enabled.
-
-`200`: `Organization`. Screen text: «Organization updated». Errors: as for create (plus `REQUIRED` on empty `sections`: «Select at least one section»), `404 NOT_FOUND`, and:
+`PATCH /organizations/{id}` accepts any subset of `name`, `subdomain`, `customDomain`, `owner`, and `sections`. `presetId` cannot be changed.
 
 | Status | `code` | `field` | Fixed text in the canon |
 |---|---|---|---|
 | 409 | `OWNER_IS_STAFF` | `owner.email` | This e-mail is already a staff member of this organization |
 
-### `POST /organizations/{id}/deactivate` and `POST /organizations/{id}/activate`
+### `POST /organizations/{id}/deactivate`, `POST /organizations/{id}/activate`, `POST /organizations/{id}/impersonate`, and `POST /api/organization/auth/impersonation/exchange`
 
-No body. `200`: `Organization` with the new status. Deactivation revokes the organization's sessions as described in `authentication.md`. `404 NOT_FOUND` if there is no such organization.
-
-### `POST /organizations/{id}/impersonate` — log in as organization
-
-No body. Works in any organization state. `200`:
-
-```json
-{ "code": "k3J…", "expiresIn": 60 }
-```
-
-On click, the frontend opens an empty new tab at once and, after this response, sends it to the organization admin with the handoff code after `#`. Flow: `authentication.md`. `404 NOT_FOUND` if there is no such organization.
-
-### `POST /api/organization/auth/impersonation/exchange` — exchange the handoff code (organization API, public)
-
-Full path, in the organization API. Called by the organization admin. Requires `X-Requested-With`.
-
-Body:
-
-```json
-{ "code": "k3J…" }
-```
-
-`200`, and `Set-Cookie: sd_organization_refresh=…` (`HttpOnly; Secure; SameSite=Strict; Path=/api/organization/auth`):
-
-```json
-{
-  "accessToken": "eyJ…",
-  "accessTokenExpiresIn": 900,
-  "user": { "email": "owner@example.com" },
-  "organization": { "id": "6f1c…", "name": "Yoga Space" }
-}
-```
-
-The session is an organization API session of the current owner with `impersonated_by` set (`authentication.md`).
-
-| Status | `code` | When |
-|---|---|---|
-| 400 | `INVALID_HANDOFF_CODE` | the code is unknown, expired, or already used |
-
-## Essay — error codes and screen texts
-
-The frontend picks the text by `code` (and `field`). Fixed texts come from `overview.md`.
-
-| `code` | Text |
-|---|---|
-| `VALIDATION_ERROR` on `email` / `owner.email` | Enter a valid e-mail address |
-| `VALIDATION_ERROR` on `name` | Use 2–100 characters |
-| `VALIDATION_ERROR` on `subdomain` | Use 3–20 lowercase letters, digits or hyphens, starting with a letter |
-| `VALIDATION_ERROR` on `customDomain` | Enter a valid domain, for example yogaspace.com |
-| `VALIDATION_ERROR` on `presetId` | Select a preset |
-| `VALIDATION_ERROR` on `sections` | Select at least one section |
-| `VALIDATION_ERROR` on `labels` | Enter all language labels |
-| `PRESET_NAME_TAKEN` | This preset name is already taken |
-| `RESEND_TOO_EARLY` | Please wait before requesting a new code |
-| `TOO_MANY_ATTEMPTS` | Too many attempts. Try again later |
-| `CODE_EXPIRED` | The code has expired. Request a new one |
-| `INVALID_CODE` | Invalid or expired code |
-| `SESSION_EXPIRED` | Your session has expired. Sign in again |
-| `UNAUTHORIZED` from `POST /auth/refresh` | no text, sign-in screen |
-| `SUBDOMAIN_RESERVED` | This subdomain is reserved |
-| `SUBDOMAIN_TAKEN` | This subdomain is already taken |
-| `DOMAIN_TAKEN` | This domain is already used by another organization |
-| `OWNER_IS_STAFF` | This e-mail is already a staff member of this organization |
-| any other error of an action or of loading the list | Something went wrong. Try again |
-
-## Essay — how it connects
-
-- Product behaviour and texts: `overview.md`.
-- Requirements and phases: `backend-brief.md`.
-- Errors, lists, OpenAPI: `../../03-architecture/api-conventions.md`.
-- Sessions, cookie, handoff code: `../../03-architecture/authentication.md`.
-
-## Agent — rules
-
-- Every endpoint, code, and field here appears in the OpenAPI document of the platform API.
-- Renaming a `code` or a field is a contract change: agree it first.
-- No endpoint physically deletes an organization or manages platform administrators.
-- Creating an organization copies the chosen preset into the organization's own configuration tables in one transaction; `presetId` is not changeable on `PATCH /organizations/{id}`.
-- The response to `POST /auth/code` and the errors of `POST /auth/sign-in` never reveal whether an e-mail has access.
+As defined in `overview.md` and `../../03-architecture/authentication.md`.
 
 ## Agent — acceptance checklist
 
 - [ ] Each endpoint matches its path, method, body, response, and status codes
-- [ ] Presets CRUD and duplicate (`/presets`) validate `sections`, `serviceConfig`, and `resourceTypes` (exactly one `place` resource type and all three language labels `en/sk/uk`)
-- [ ] `POST /organizations` requires `presetId` and copies the preset configuration into the organization
+- [ ] Presets CRUD and duplicate (`/presets`) validate `sections`, `catalogConfig`, `scheduleConfig`, and `billingConfig` (exactly one `place` resource type and all three language labels `en/sk/uk`)
+- [ ] `POST /organizations` requires `presetId` and copies the preset modular configuration into the organization
 - [ ] `PATCH /organizations/{id}` allows updating `sections` and does not allow overwriting the preset
-- [ ] Format errors of all fields come in one response; `409` checks follow in table order
-- [ ] E-mails, subdomains, and custom domains are lowercased on save and search; e-mails are lowercased on sign-in
-- [ ] Cookie name and attributes, `X-Requested-With`, and CORS match `authentication.md`
-- [ ] Identical answers for an e-mail with and without access
-- [ ] Uniqueness checks include deactivated organizations
-- [ ] An e-mail of a current staff member of the organization cannot become its owner (`OWNER_IS_STAFF`)
 
 ## Open questions
 
