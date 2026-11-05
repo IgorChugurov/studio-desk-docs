@@ -55,8 +55,10 @@
 
 ## Эссе — как связано
 
+- Дизайн-кит, токены, каталог компонентов `src/shared/ui/`, типы страниц и владелец скролла: [`ui-kit-and-pages.md`](./ui-kit-and-pages.md).
 - Как мы работаем над фичей: `../00-governance/feature-workflow.md`.
 - Шаблон задания дизайнеру: `../00-governance/templates/design-brief.md`.
+- Шаблон задания фронтенду: `../00-governance/templates/frontend-brief.md`.
 - Пример канона с потоками: `../01-product/platform-admin/overview.md`.
 
 ## Агент — правила

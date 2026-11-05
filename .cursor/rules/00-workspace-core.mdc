@@ -1,0 +1,34 @@
+---
+description: StudioDesk workspace core rules (canon SoT, 6-item implementation plan gate, read-only diagnostics, UI kit & page layout rules)
+alwaysApply: true
+---
+
+# StudioDesk Workspace Core Rules (Single Source of Truth)
+
+## 1. Sources of Truth (`studio-desk-docs`)
+- **Governance & workflow**: `studio-desk-docs/00-governance/` (`documentation-rules.md`, `feature-workflow.md`, `approval-rules.md`, `work-items.md`, `templates/`).
+- **Product & domain canon**: `studio-desk-docs/01-product/` (`profile.md`, `platform-admin/`, `organization-admin/`).
+- **Design, UI kit & page layout canon**: `studio-desk-docs/02-design/` (`flow-design.md`, `ui-kit-and-pages.md`).
+- **Architecture & engineering rules**: `studio-desk-docs/03-architecture/` and `studio-desk-docs/04-engineering-rules/`.
+- **Slash commands**: `studio-desk-docs/.cursor/commands/` (`/start-work-sd`, `/close-work-sd`, `/evolve-ipd`).
+
+## 2. Planning, Specify/Test Plan & Read-Only Gate (Mandatory)
+- **Understanding gate**: on any new task, first reply with 2–3 human-language sentences stating what the owner will see and what stays unchanged, then **stop** and wait for confirmation.
+- **No file changes without an approved 6-item plan**: before editing, creating, or deleting any file, present the exact file/section plan containing all 6 items from `00-governance/feature-workflow.md` and wait for explicit owner `OK`:
+  1. **Cause** (proven root cause or explicit symptom label)
+  2. **Reuse** (what existing components/helpers in the workspace were checked and reused)
+  3. **Compatibility** (all usages of touched shared code and how they stay unbroken)
+  4. **Blast radius** (what else the change can affect)
+  5. **Specify (`AC-1..AC-N`)** (short observable acceptance criteria for this slice; no separate PRD)
+  6. **Test plan (1:1 to Specify)** (one check per criterion: how verified via `pnpm test` / API check / manual flow step, and what counts as a fail)
+- **Post-Backend & Post-Figma Canon Sync**: when backend implementation (`*-backend-brief-feedback.md`) or Figma design introduces new invariants, states, or flow changes, synchronize the topic canon (`01-product/<topic>/` and `api-contract.md`) before starting frontend slice coding.
+- **Diagnostic prompts & bare links are READ-ONLY**: any message with «проверь», «посмотри», «почему не работает», «что думаешь», a visual mismatch report, or a bare Figma URL / screenshot is strictly read-only — even mid-session after an earlier `OK`. Inspect code/canon first, report findings + plan, and wait for a new `OK`.
+
+## 3. Frontend UI & Design Implementation (`studio-desk-frontend`)
+- Before any UI, screen, or styling task in `studio-desk-frontend` (both when working directly from topic canon flows without Figma and when working from Figma frames), read:
+  1. `studio-desk-docs/02-design/ui-kit-and-pages.md` (tokens, typography, `src/shared/ui/` catalogue, page types, scroll owner, state matrix)
+  2. `studio-desk-docs/02-design/flow-design.md` (step-by-step flows, desktop `1280px` & mobile `390×844` rules, fixed copy, Figma node / `design error` binding)
+  3. The matching topic canon in `studio-desk-docs/01-product/<topic>/` (section «Потоки по шагам» and `api-contract.md`)
+- **Screen mapping before code**: always present the Screen mapping (page type, scroll owner, mapping of flow blocks to `src/shared/ui/` components, and covered states) and obtain owner `OK` before writing UI code.
+- **Strict kit & token resolution**: build all controls exclusively from `src/shared/ui/` (`Button`, `Input`, `Field`, `SearchInput`, `Select`, `MultiSelect`, `FilterMenu`, `Command`, `Popover`, `DropdownMenu`, `Table`, `Pagination`, `Tabs`, `Breadcrumbs`, `Avatar`, `Modal`, `Notice`, `Toaster`), `lucide-react` icons, and CSS variables from `src/shared/styles/figma-tokens.css` & `.figma-*` classes from `figma-typography.css`. Never invent raw HTML controls, ad-hoc hex colors, or arbitrary pixel spacing.
+- **CI gate before done**: in `studio-desk-frontend`, always run and pass `pnpm typecheck`, `pnpm lint` (`oxlint --type-aware`), `pnpm format:check`, and `pnpm test` before claiming completion.
