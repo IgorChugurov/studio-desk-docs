@@ -1,5 +1,5 @@
 ---
-description: StudioDesk workspace core rules (canon SoT, 6-item implementation plan gate, read-only diagnostics, UI kit & page layout rules)
+description: StudioDesk workspace core rules (canon SoT, 6-item implementation plan gate, read-only diagnostics, UI from canon and existing pages)
 alwaysApply: true
 ---
 
@@ -9,8 +9,9 @@ alwaysApply: true
 - **Governance & workflow**: `studio-desk-docs/00-governance/` (`documentation-rules.md`, `feature-workflow.md`, `approval-rules.md`, `work-items.md`, `templates/`).
 - **Product & domain canon**: `studio-desk-docs/01-product/` (`profile.md`, `platform-admin/`, `organization-admin/`).
 - **Design, UI kit & page layout canon**: `studio-desk-docs/02-design/` (`flow-design.md`, `ui-kit-and-pages.md`).
-- **Architecture & engineering rules**: `studio-desk-docs/03-architecture/` and `studio-desk-docs/04-engineering-rules/`.
+- **Architecture & engineering rules**: `studio-desk-docs/03-architecture/` and `studio-desk-docs/04-engineering-rules/backend.md`. Screen rules live in `02-design/`, not in `04-engineering-rules/`.
 - **Slash commands**: `studio-desk-docs/.cursor/commands/` (`/start-work-sd`, `/close-work-sd`, `/evolve-ipd`).
+- **Repository-local checks** (branch, CI, commands) live in that repo's `.cursor/rules/project.mdc` and apply only while working in that repo.
 
 ## 2. Planning, Specify/Test Plan & Read-Only Gate (Mandatory)
 - **Understanding gate**: on any new task, first reply with 2–3 human-language sentences stating what the owner will see and what stays unchanged, then **stop** and wait for confirmation.
@@ -21,14 +22,18 @@ alwaysApply: true
   4. **Blast radius** (what else the change can affect)
   5. **Specify (`AC-1..AC-N`)** (short observable acceptance criteria for this slice; no separate PRD)
   6. **Test plan (1:1 to Specify)** (one check per criterion: how verified via `pnpm test` / API check / manual flow step, and what counts as a fail)
-- **Post-Backend & Post-Figma Canon Sync**: when backend implementation (`*-backend-brief-feedback.md`) or Figma design introduces new invariants, states, or flow changes, synchronize the topic canon (`01-product/<topic>/` and `api-contract.md`) before starting frontend slice coding.
-- **Diagnostic prompts & bare links are READ-ONLY**: any message with «проверь», «посмотри», «почему не работает», «что думаешь», a visual mismatch report, or a bare Figma URL / screenshot is strictly read-only — even mid-session after an earlier `OK`. Inspect code/canon first, report findings + plan, and wait for a new `OK`.
+- **Post-backend canon sync**: when backend implementation (`*-backend-brief-feedback.md`) introduces new invariants, states, or flow changes, synchronize the topic canon (`01-product/<topic>/` and `api-contract.md`) before starting frontend slice coding. The same applies later, if a Figma frame appears and changes the flow.
+- **Diagnostic prompts & bare links are READ-ONLY**: any message with «проверь», «посмотри», «почему не работает», «что думаешь», «не совпадает», a visual mismatch report, or a bare Figma URL / screenshot is strictly read-only — even mid-session after an earlier `OK`. Inspect code/canon first, report findings + plan, and wait for a new `OK`.
 
-## 3. Frontend UI & Design Implementation (`studio-desk-frontend`)
-- Before any UI, screen, or styling task in `studio-desk-frontend` (both when working directly from topic canon flows without Figma and when working from Figma frames), read:
+## 3. Frontend UI (`studio-desk-frontend`)
+- There is no Figma in the current work. It may appear later. Until then, build a screen from the topic canon, from `src/shared/ui/`, and from an already built page of the same type. Page-type exemplars are in `studio-desk-docs/02-design/ui-kit-and-pages.md`. Do not wait for a layout and do not invent raw HTML controls.
+- Before any UI, screen, or styling task, read:
   1. `studio-desk-docs/02-design/ui-kit-and-pages.md` (tokens, typography, `src/shared/ui/` catalogue, page types, scroll owner, state matrix)
-  2. `studio-desk-docs/02-design/flow-design.md` (step-by-step flows, desktop `1280px` & mobile `390×844` rules, fixed copy, Figma node / `design error` binding)
+  2. `studio-desk-docs/02-design/flow-design.md` (step-by-step flows, desktop `1280px` and mobile `390×844`, fixed copy)
   3. The matching topic canon in `studio-desk-docs/01-product/<topic>/` (section «Потоки по шагам» and `api-contract.md`)
-- **Screen mapping before code**: always present the Screen mapping (page type, scroll owner, mapping of flow blocks to `src/shared/ui/` components, and covered states) and obtain owner `OK` before writing UI code.
-- **Strict kit & token resolution**: build all controls exclusively from `src/shared/ui/` (`Button`, `Input`, `Field`, `SearchInput`, `Select`, `MultiSelect`, `FilterMenu`, `Command`, `Popover`, `DropdownMenu`, `Table`, `Pagination`, `Tabs`, `Breadcrumbs`, `Avatar`, `Modal`, `Notice`, `Toaster`), `lucide-react` icons, and CSS variables from `src/shared/styles/figma-tokens.css` & `.figma-*` classes from `figma-typography.css`. Never invent raw HTML controls, ad-hoc hex colors, or arbitrary pixel spacing.
-- **CI gate before done**: in `studio-desk-frontend`, always run and pass `pnpm typecheck`, `pnpm lint` (`oxlint --type-aware`), `pnpm format:check`, and `pnpm test` before claiming completion.
+- **Context in every UI message**: name the surface from `studio-desk-docs/01-product/profile.md` (platform admin, organization admin, or the public site), the section, and the flow in the topic canon. Do not invent a surface-id registry.
+- **Screen mapping before code**: always present the Screen mapping (page type, scroll owner, mapping of flow blocks to `src/shared/ui/` and to the existing page of that type, and covered states) and obtain owner `OK` before writing UI code.
+- **Kit and tokens**: build controls from `src/shared/ui/` and the catalogue in `ui-kit-and-pages.md`, icons from `lucide-react`, and CSS variables from `src/shared/styles/figma-tokens.css` and `.figma-*` classes from `figma-typography.css`. Never invent raw HTML controls, ad-hoc hex colors, or arbitrary pixel spacing.
+
+## 4. Write scope
+- Mutate only the repository the current task is about. Canon stays in `studio-desk-docs`. Code stays in the repository being implemented.

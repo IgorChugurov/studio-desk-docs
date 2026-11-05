@@ -38,12 +38,9 @@ Complete the frontend by replacing the legacy split `Catalogs` (`Halls`, `Traine
        - `Templates` tab (`/week-templates` and `/week-templates/:id/rows`): list, create, rename, delete template, and edit template rows (`service` and `block` rows by `weekday`) in a dateless week grid.
        - Week action buttons (`Apply template`, `Clear weeks`, `Replace with template` calling `/weeks/apply`, `/weeks/clear`, `/weeks/replace` with preview counts and the `Conflicts` resolution modal `Keep existing` / `Apply new`). Hidden for `specialist` role and on embedded resource pages.
 
-## IMPORTANT — Frontend CI rules (`studio-desk-frontend/AGENTS.md`)
+## Frontend repository checks
 
-Before finishing, you MUST run and pass all three commands in `studio-desk-frontend`:
-1. `pnpm lint` (`oxlint --type-aware`) — do NOT call `setState` synchronously inside `useEffect` (`react(set-state-in-effect)`); do NOT call `String(obj)` on non-string values.
-2. `pnpm format:check` (run `pnpm exec prettier --write` on all added/edited files).
-3. `pnpm test` (Vitest).
+Before finishing, run the checks in `studio-desk-frontend/.cursor/rules/project.mdc`.
 
 ## Acceptance criteria
 

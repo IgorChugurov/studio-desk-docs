@@ -29,12 +29,9 @@ This is **Stage 4 of 5**.
 - Keep existing `Catalogs` and `Schedule` files compiling (update any broken imports from `session` / `api` / `sections` if needed) — **Stage 5** will rewrite `Catalogs` and `Schedule` UI to the unified `/resources` and `/schedule-slots` endpoints.
 - **Note on internal Next.js folder path:** You may either keep the internal Next rewrite folder `src/app/studio` (since `src/proxy.ts` rewrites `app.*` host to it internally and the browser URL never shows `/studio`) or rename it, as long as external browser URLs (`/sign-in`, `/select`, `/schedule`, `/catalogs`, `/settings`, `/staff`, `/impersonate`) and API paths (`/api/organization/*`) work seamlessly. Keeping `src/app/studio` and `src/studio` as internal folder names avoids unnecessary file-move churn.
 
-## IMPORTANT — Frontend CI rules (`studio-desk-frontend/AGENTS.md`)
+## Frontend repository checks
 
-Before finishing, you MUST run and pass all three commands in `studio-desk-frontend`:
-1. `pnpm lint` (`oxlint --type-aware`) — do NOT call `setState` synchronously inside `useEffect` (`react(set-state-in-effect)`); do NOT call `String(obj)` on non-string values.
-2. `pnpm format:check` (run `pnpm exec prettier --write` on all added/edited files).
-3. `pnpm test` (Vitest).
+Before finishing, run the checks in `studio-desk-frontend/.cursor/rules/project.mdc`.
 
 ## Deliverables
 

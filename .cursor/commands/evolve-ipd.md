@@ -2,15 +2,15 @@
 
 Analyze completed or explicitly accepted work and answer one question:
 
-> Is there anything here that should change how IPD performs future work?
+> Is there anything here that should change how StudioDesk performs future work?
 
 The command reconstructs enough of the delivery experience to identify a probable method-level problem and, when justified, proposes one minimal evolution candidate. It is read-only. It does not turn an observation into canon, create a new workflow object, or modify a closed work item.
 
 **Language:** reply in the same language the user used. Keep paths, IDs, frontmatter keys, and code identifiers in English.
 
-**Lifecycle:** `integration-platform-documentation/00-governance/work-session-lifecycle.md`
-**Mode A:** `integration-platform-documentation/00-governance/ipd-program-playbook.md`
-**Work item SoT:** `integration-platform-documentation/90-operations/work-items/<work-item-id>/README.md`
+**Lifecycle:** `00-governance/work-items.md`
+**Feature workflow:** `00-governance/feature-workflow.md`
+**Work item SoT:** `90-operations/work-items/<work-item-id>/README.md`
 
 ---
 
@@ -43,7 +43,7 @@ Read only what is needed:
 1. Completed work item, or explicit owner acceptance when no item exists
 2. Relevant transcript and cited prior chats
 3. Decisions, handoff, diffs/commits, verification, inspection, and acceptance that shaped the result
-4. Current IPD canon and command/workflow contracts implicated by a probable root cause
+4. Current StudioDesk canon and command/workflow contracts implicated by a probable root cause
 5. Existing `## Design learning (recommendations)` when present
 6. For effect verification, the approved method change and later comparable work
 7. `## Method observation` sections in closed method-change work items, to check whether the current work falls under an earlier observation question
@@ -64,9 +64,9 @@ Ask only for evidence that is both missing and material. A transcript is evidenc
    - a probable repeatable weakness in the method.
 6. A recommendation or evolution candidate is not a rule. Human discussion and decision come before any canon change.
 7. Prefer one minimal change to an existing canonical rule, command, or workflow. Do not propose an RFC system, parallel knowledge hierarchy, metrics platform, new agent, or new workflow stage.
-8. IPD is durable method memory, not an event store. Conversations, temporary observations, and one-off incidents do not automatically become IPD.
-9. Do not duplicate design analysis. If `/analyze-design-work-ipd` already produced recommendations, consume them as evidence and analyze whether any indicate a method-level change.
-10. Do not repurpose `/maintain-ipd`. Canon Maintenance aligns verified product current-state facts after push; method evolution is a human-owned semantic decision.
+8. StudioDesk canon is durable method memory, not an event store. Conversations, temporary observations, and one-off incidents do not automatically become canon.
+9. Do not duplicate a design note already written in the work item or in `02-design/`. This repo has no separate design-analysis command.
+10. Do not invent a product-maintenance command. Product facts stay in `01-product/` and `03-architecture/`. Method evolution stays a human decision.
 11. Do not claim that the method improved merely because a rule changed. Improvement requires later comparable work and evidence that the motivating problem was reduced.
 12. Respect the user constitution: no hidden decisions, no scope widening, and no writes before an exact file/section/change/reason preview plus explicit approval.
 
@@ -137,7 +137,7 @@ Only when the evidence supports a probable method problem, answer:
 - **Why is this probably a method problem rather than a one-off incident?**
 - **What evidence supports that?**
 - **What is the smallest proposed change?**
-- **Where should it live in the existing IPD canon, command, or workflow?**
+- **Where should it live in the existing StudioDesk canon, command, or workflow?**
 - **What future work should it affect?**
 - **How will later comparable work show whether it helped?**
 
@@ -149,7 +149,7 @@ Present the reasoning and candidate in chat. Do not write anything.
 
 If the owner rejects the candidate, no artifact is created. If the owner is undecided, continue discussion without creating a queue.
 
-If the owner approves the candidate, treat the canon change as ordinary Mode A work through `/start-work-ipd`: use the existing work-item lifecycle, show the exact file/section/change/reason plan, wait for implementation approval, then change the existing owning surface. Do not create an `EvolutionCandidate` entity or status.
+If the owner approves the candidate, treat the canon change as ordinary work through `/start-work-sd`: use `00-governance/work-items.md`, show the exact file/section/change/reason plan, wait for implementation approval, then change the existing owning document. Do not create an `EvolutionCandidate` entity or status.
 
 The method-change work records the motivating evidence, the class of comparable work, and a concrete future observation question under `## Method observation` in its normal body. The heading makes the question findable; it is not a field or a status. Closing that work means **the method changed**, not that the method already improved.
 
@@ -212,8 +212,6 @@ The assessment words describe the analysis; they are not stored enums.
 
 ## Related
 
-- Start approved Mode A change: `/start-work-ipd`
-- Close delivery: `/close-work-ipd`
-- Detailed design learning: `/analyze-design-work-ipd`
-- Product current-fact maintenance: `/maintain-ipd`
-- Command catalog: `.cursor/commands/README.md`
+- Start approved change: `/start-work-sd`
+- Close delivery: `/close-work-sd`
+- Commands in this repo: `.cursor/commands/` (`start-work-sd`, `close-work-sd`, `evolve-ipd`)
