@@ -8,11 +8,10 @@
 > Deviations, better approaches, and implementation discoveries are recorded in
 > `frontend-brief-feedback.md` in the same folder. Only the owner changes canon.
 >
-> **When issued.** Not before the design is approved and `api-contract.md` is agreed, because this
-> brief derives from both. A finished backend implementation is not required.
+> **When issued.** Issued after `api-contract.md` is agreed and any new invariants from backend implementation (`*-backend-brief-feedback.md`) or design are synchronized back into the topic canon (`01-product/<topic>/`). When Figma is used for the slice, the design frames must be approved and their `Figma node ID`s (plus any `design error` notes where a frame diverges from canon) bound to the step-by-step flows. When Figma is not created for the slice, the layout, states, and fixed copy come directly from the topic canon's step-by-step flows (`Потоки по шагам`) and `02-design/flow-design.md`.
 
-**Derived from:** <links to the topic canon, design brief, and api-contract.md>
-**Figma:** <links to files and nodes>
+**Derived from:** <links to the topic canon, design brief (if any), and api-contract.md>
+**Figma:** <links to files and nodes, or "none — driven by step-by-step flows in topic canon">
 
 ## Mission
 One paragraph: which surface is being built and what becomes possible when it works.
@@ -65,11 +64,11 @@ the owner approves the mapping.
 ## Phases
 Ordered, each independently reviewable, each naming what it depends on.
 
-## Required tests
-What must be proven, not how. Include the invariants from Target behaviour.
+## Required tests (`Test plan`, 1:1 to Acceptance criteria)
+For each acceptance criterion (`AC-1..AC-N`), state one check: **how it is verified** (`pnpm test`, API request inspection, or manual step along the flow) and **what counts as a fail** (fail condition). Include the invariants from Target behaviour and bind screen/flow checks to the flow steps (and `Figma node ID` when present).
 
-## Acceptance criteria
-Numbered, checkable statements, including that existing behaviour stays green.
+## Acceptance criteria (`Specify`)
+Numbered, observable outcomes (`AC-1..AC-N`) by which each slice/phase can be accepted, including that existing behaviour and CI checks (`pnpm lint`, `pnpm format:check`, `pnpm test`) stay green.
 
 ## Open questions
 Points this brief deliberately leaves to implementation. Answer by number in

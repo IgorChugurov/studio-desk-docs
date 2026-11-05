@@ -41,8 +41,8 @@ Ask for the reason if missing. Write it in the item, set `status: cancelled`, up
 ### Step 3 - Check
 
 Check and report in plain language:
-1. The result matches the Goal and Boundaries in the item, or the owner accepted a reduced scope.
-2. A verification artifact exists (rule 4).
+1. The result matches the Goal, Boundaries, and the approved **Specify (acceptance criteria `AC-1..AC-N`)** from the slice's implementation plan (or the owner accepted a reduced scope).
+2. The **Test plan (1:1 to Specify)** checks for the slice were executed and passed (or explicitly waived by the owner), and a concrete verification artifact exists (rule 4).
 3. Git state in the affected repositories: no unexpected or unfinished files.
 
 If anything is missing, show the gaps and stop (rule 2).
