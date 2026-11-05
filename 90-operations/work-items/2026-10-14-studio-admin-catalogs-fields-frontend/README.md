@@ -1,8 +1,8 @@
 ---
 id: 2026-10-14-studio-admin-catalogs-fields-frontend
 title: Фронтенд новых полей каталога
-status: in-progress
-updated_at: 2026-10-14
+status: cancelled
+updated_at: 2026-11-05
 ---
 
 # Фронтенд новых полей каталога
@@ -19,6 +19,8 @@ updated_at: 2026-10-14
 - Бэкенд готов (`2026-10-14-studio-admin-catalogs-schedule-fields`), повторная реализация бэкенда не нужна.
 
 ## Этап
+
+Отменена 2026-11-05: заменена единым каталогом и расписанием.
 
 `feature-workflow.md`, полный маршрут, этап 6 — задание фронтенду. Ведёт фронтенд.
 
