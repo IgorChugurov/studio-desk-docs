@@ -46,7 +46,7 @@ This slice is the Schedule tab only. These are the invariants a plausible-lookin
 
 1. The page opens on the current week, in the studio time zone. Arrows and a calendar move to any week, including far ahead. The view time zone can be switched. Filters are one hall, one trainer, one class type, or All. Filters and the view time zone survive a week change and reset when the page is left.
 2. While hall and trainer are All, columns are halls or trainers and the week runs downward: Monday, then Tuesday, and so on. The page scrolls to today. One hall, or one trainer, switches to the week grid: columns are days, rows are hours. Hall and trainer together show that hall's week grid with only that trainer's classes. Today's column is marked. A class with several trainers appears in each trainer's column.
-3. Hours 08:00–22:00 are visible. 00:00–08:00 and 22:00–24:00 are thin bands. A click expands that band for the whole week. If the week has a class in those hours, the band starts open. The browser remembers the bands for this person. A day in the downward view collapses from its date header, starts open, and is open again on the next week. Collapsed days are not remembered.
+3. Hours 08:00–22:00 are visible. 00:00–08:00 and 22:00–24:00 are thin bands. A click expands that band for the whole week. If the week has a class in those hours, the band starts open. The browser remembers the bands for this person. A day in the downward view collapses from its date header. The header shows an icon on the right. A past day starts closed. Today and a future day start open. After a reload or a week change, past days are closed again and the other days are open. Collapsed days are not remembered.
 4. A class is placed by converting its hall-clock date and start into the view time zone. The stored digits are not rewritten. On a card: the class type, the start and end, the trainers when columns are halls, the hall when columns are trainers, the format when it is not ordinary offline, and «one person» when the class is not a group.
 5. An empty cell, including an expanded night band, opens «New class» only when that view-time start has not passed. The form shows the view time. Save sends the hall's clock. A past cell does not open the form. A future class can change time, date, hall, duration, trainers, format, and places. The class type is read-only. A past class, including a cancelled one, is read-only. A future cancelled class offers only Restore and Delete.
 6. Where a live class occupies a slot, cancelled classes at that slot are one thin strip. Where it does not, the slot is one card marked «Cancelled». A click opens the list of cancelled classes that overlap that slot. Each row shows the class type, time, hall, trainers, format, and places. A future row has Restore and Delete. A past row has none.
@@ -95,7 +95,7 @@ Replace is in this slice: the class window's Replace opens the same form as New 
 - Hall and trainer together show that hall's week with only that trainer's classes.
 - A class in another hall time zone moves on the grid when the view time zone changes, and the request still sends the hall's clock.
 - A trainer sees only their classes and cannot save. An accountant does not open Schedule.
-- Night-band state survives a reload. A collapsed day does not.
+- Night-band state survives a reload. A past day starts closed. A collapsed future day does not survive a reload.
 - Existing staff, settings, and catalog tests stay green.
 
 ## Acceptance criteria
